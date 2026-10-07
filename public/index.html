@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIS Monitor - Selat Madura & Pelabuhan Tanjung Perak</title>
+  <meta name="description" content="Dashboard monitoring pergerakan kapal AIS simulasi real-time di Selat Madura dan Pelabuhan Tanjung Perak Surabaya.">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Custom Styling -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Header Navigasi & Info Sistem -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="radar-pulse"></div>
+        <div class="brand-text">
+          <h1>AIS Vessel Tracker</h1>
+          <span class="subtitle">Selat Madura &bull; Pelabuhan Tanjung Perak</span>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-badge">
+          <span class="stat-indicator online"></span>
+          <span class="stat-label">STATUS</span>
+          <span class="stat-value">LIVE SIMULASI</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-label">TOTAL KAPAL</span>
+          <span class="stat-value" id="totalShips">10</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-label">UPDATE TERAKHIR</span>
+          <span class="stat-value" id="lastUpdated">--:--:--</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-label">INTERVAL POLLING</span>
+          <span class="stat-value">2 Detik</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Kontainer Peta dan Panel Interaktif -->
+    <main class="main-content">
+      <!-- Peta Leaflet -->
+      <div id="map" class="map-container"></div>
+
+      <!-- Floating Sidebar: Daftar Kapal & Legend -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M2 20a2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1"/>
+              <path d="M4 18l4-10h8l4 10"/>
+              <path d="M12 4v4"/>
+            </svg>
+            <h2>Armada Kapal Aktif</h2>
+          </div>
+          <button id="toggleSidebar" class="sidebar-toggle-btn" title="Ciutkan / Rentangkan Panel">
+            <span class="toggle-icon">&minus;</span>
+          </button>
+        </div>
+
+        <!-- Tipe Kapal Legend -->
+        <div class="legend-bar">
+          <div class="legend-item"><span class="badge-dot ferry"></span> Ferry</div>
+          <div class="legend-item"><span class="badge-dot cargo"></span> Cargo</div>
+          <div class="legend-item"><span class="badge-dot tanker"></span> Tanker</div>
+          <div class="legend-item"><span class="badge-dot tug"></span> Tug</div>
+        </div>
+
+        <!-- Daftar Kapal Real-time -->
+        <div class="ship-list-container" id="shipListContainer">
+          <div class="loading-state">Memuat armada kapal AIS...</div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+</body>
+</html>
