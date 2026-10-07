@@ -5,12 +5,13 @@
 
 // Konfigurasi Awal
 const MAP_CENTER = [-7.1850, 112.7380]; // Pusat: Selat Madura & Tanjung Perak
-const MAP_ZOOM = 13;
+const MAP_ZOOM = 12;
 const POLLING_INTERVAL_MS = 2000;
 
 // Penyimpanan referensi marker kapal (key: MMSI)
 const markersMap = new Map();
 let currentSelectedMmsi = null;
+let fitted = false;
 
 // 1. Inisialisasi Peta Leaflet
 const map = L.map('map', {
@@ -22,10 +23,9 @@ const map = L.map('map', {
 // Kontrol zoom di pojok kiri atas
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-// Tile Layer CartoDB Voyager (tampilan nautikal bersih dan kontras tinggi untuk perairan)
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-  subdomains: 'abcd',
+// Tile Layer OpenStreetMap
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19
 }).addTo(map);
 
@@ -88,6 +88,7 @@ function createPopupContent(ship) {
 function renderShipList(ships) {
   const container = document.getElementById('shipListContainer');
   if (!container) return;
+  const scrollTop = container.scrollTop; // simpan posisi scroll
 
   container.innerHTML = ships.map((ship) => {
     const isActive = ship.mmsi === currentSelectedMmsi ? 'active' : '';
@@ -105,6 +106,8 @@ function renderShipList(ships) {
       </div>
     `;
   }).join('');
+
+  container.scrollTop = scrollTop; // kembalikan posisi scroll
 
   // Pasang event klik pada tiap card kapal
   container.querySelectorAll('.ship-item-card').forEach((card) => {
@@ -196,6 +199,12 @@ async function fetchShips() {
 
     // Perbarui posisi kapal di peta dan list sidebar
     updateMapMarkers(ships);
+
+    if (!fitted && ships.length) {
+      map.fitBounds(ships.map(s => [s.lat, s.lon]), { padding: [60, 60] });
+      fitted = true;
+    }
+
     renderShipList(ships);
   } catch (err) {
     console.error('Gagal mengambil data kapal AIS:', err);
