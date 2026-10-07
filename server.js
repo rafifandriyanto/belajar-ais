@@ -47,6 +47,36 @@ app.get('/api/ships', (req, res) => {
   });
 });
 
+// Endpoint API untuk mendapatkan 100 posisi terakhir kapal berdasarkan MMSI
+app.get('/api/ships/:mmsi/history', async (req, res) => {
+  const { mmsi } = req.params;
+
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        status: 'error',
+        message: 'Koneksi database MongoDB belum tersedia'
+      });
+    }
+
+    const history = await Position.find({ mmsi })
+      .sort({ timestamp: -1 })
+      .limit(100);
+
+    res.json({
+      status: 'success',
+      mmsi,
+      count: history.length,
+      data: history
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
+  }
+});
+
 // Update posisi simulasi kapal setiap 2 detik dan pancarkan event ke client
 const SIMULATION_INTERVAL_MS = 2000;
 setInterval(() => {
