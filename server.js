@@ -6,6 +6,14 @@
 
 require('dotenv').config();
 
+const dns = require('dns');
+// Gunakan public DNS (Google & Cloudflare) agar resolusi SRV MongoDB Atlas stabil di jaringan lokal/ISP
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  // abaikan jika tidak diizinkan oleh sistem
+}
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
