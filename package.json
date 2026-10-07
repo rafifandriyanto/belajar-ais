@@ -1,0 +1,22 @@
+{
+  "name": "belajar-ais-dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard Monitoring Kapal AIS (Simulasi) - Minggu 1 Selat Madura & Tanjung Perak",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "ais",
+    "marine",
+    "leaflet",
+    "simulation",
+    "express"
+  ],
+  "author": "rafifandriyanto",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
