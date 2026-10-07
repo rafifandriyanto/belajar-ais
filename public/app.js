@@ -6,7 +6,6 @@
 // Konfigurasi Awal
 const MAP_CENTER = [-7.1850, 112.7380]; // Pusat: Selat Madura & Tanjung Perak
 const MAP_ZOOM = 12;
-const POLLING_INTERVAL_MS = 2000;
 
 // Penyimpanan referensi marker kapal (key: MMSI)
 const markersMap = new Map();
@@ -177,39 +176,30 @@ function updateMapMarkers(ships) {
   });
 }
 
-// 7. Polling Data Kapal dari Backend (/api/ships)
-async function fetchShips() {
-  try {
-    const response = await fetch('/api/ships');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+// 7. Inisialisasi Socket.io dan Event Listener 'ships:update'
+const socket = io();
 
-    const json = await response.json();
-    const ships = json.data || [];
-
-    // Perbarui counter & waktu update
-    const totalShipsEl = document.getElementById('totalShips');
-    const lastUpdatedEl = document.getElementById('lastUpdated');
-    if (totalShipsEl) totalShipsEl.textContent = ships.length;
-    if (lastUpdatedEl) {
-      const now = new Date();
-      lastUpdatedEl.textContent = now.toLocaleTimeString('id-ID');
-    }
-
-    // Perbarui posisi kapal di peta dan list sidebar
-    updateMapMarkers(ships);
-
-    if (!fitted && ships.length) {
-      map.fitBounds(ships.map(s => [s.lat, s.lon]), { padding: [60, 60] });
-      fitted = true;
-    }
-
-    renderShipList(ships);
-  } catch (err) {
-    console.error('Gagal mengambil data kapal AIS:', err);
+socket.on('ships:update', (ships) => {
+  // Perbarui counter & waktu update
+  const totalShipsEl = document.getElementById('totalShips');
+  const lastUpdatedEl = document.getElementById('lastUpdated');
+  if (totalShipsEl) totalShipsEl.textContent = ships.length;
+  if (lastUpdatedEl) {
+    const now = new Date();
+    lastUpdatedEl.textContent = now.toLocaleTimeString('id-ID');
   }
-}
+
+  // Perbarui posisi kapal di peta dan list sidebar
+  updateMapMarkers(ships);
+
+  // Pusatkan peta ke armada kapal saat data pertama diterima
+  if (!fitted && ships.length) {
+    map.fitBounds(ships.map((s) => [s.lat, s.lon]), { padding: [60, 60] });
+    fitted = true;
+  }
+
+  renderShipList(ships);
+});
 
 // 8. Event Listener Toggle Sidebar
 const toggleBtn = document.getElementById('toggleSidebar');
@@ -221,7 +211,3 @@ if (toggleBtn && sidebar) {
     toggleBtn.querySelector('.toggle-icon').textContent = isCollapsed ? '+' : '−';
   });
 }
-
-// 9. Jalankan Pemanggilan Awal & Set Polling Interval 2 Detik
-fetchShips();
-setInterval(fetchShips, POLLING_INTERVAL_MS);
