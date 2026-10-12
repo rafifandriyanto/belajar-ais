@@ -3,95 +3,218 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AIS Monitor - Selat Madura & Pelabuhan Tanjung Perak</title>
+  <title>AIS Monitor — Selat Madura & Tanjung Perak</title>
   <meta name="description" content="Dashboard monitoring pergerakan kapal AIS simulasi real-time di Selat Madura dan Pelabuhan Tanjung Perak Surabaya.">
-  
+
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  
-  <!-- Custom Styling -->
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Tailwind CSS via CDN (v3 Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            navy:  { 950: '#020817', 900: '#060f2b', 800: '#0d1a3e', 700: '#132156', 600: '#1a2d73' },
+            cyan:  { 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2' },
+            ferry: '#22d3ee',   /* cyan  */
+            cargo: '#f59e0b',   /* amber */
+            tanker:'#ef4444',   /* red   */
+            tug:   '#22c55e',   /* green */
+          },
+          backdropBlur: { xs: '2px' },
+          boxShadow: {
+            glass: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+            glow:  '0 0 16px rgba(34,211,238,0.25)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom CSS (animasi & overrides Leaflet) -->
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
-<body>
-  <div class="app-layout">
-    <!-- Header Navigasi & Info Sistem -->
-    <header class="app-header">
-      <div class="header-brand">
-        <div class="radar-pulse"></div>
-        <div class="brand-text">
-          <h1>AIS Vessel Tracker</h1>
-          <span class="subtitle">Selat Madura &bull; Pelabuhan Tanjung Perak</span>
+
+<body class="bg-navy-950 text-slate-100 font-sans h-screen overflow-hidden flex flex-col">
+
+  <!-- ═══════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════ -->
+  <header id="app-header"
+    class="flex items-center justify-between px-4 py-2 border-b border-white/5
+           bg-navy-900/80 backdrop-blur-sm z-10 flex-shrink-0 gap-3 flex-wrap">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-3 min-w-0">
+      <!-- Logo ikon jangkar / radar -->
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-500/40
+                    flex items-center justify-center shadow-glow">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="#22d3ee" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="2"/>
+            <line x1="12" y1="2" x2="12" y2="6"/>
+            <line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="6" y2="12"/>
+            <line x1="18" y1="12" x2="22" y2="12"/>
+          </svg>
         </div>
+        <!-- Denyut online -->
+        <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
+                     bg-emerald-400 border-2 border-navy-900 animate-pulse"></span>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-base font-bold text-white leading-tight tracking-tight truncate">
+          AIS Vessel Tracker
+        </h1>
+        <p class="text-[10px] text-cyan-400/80 font-medium truncate">
+          Selat Madura &bull; Tanjung Perak
+        </p>
+      </div>
+    </div>
+
+    <!-- Stats & Map Toggle -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <!-- Toggle Tema Peta (Mode Gelap / OSM Standar awal) -->
+      <button id="toggleMapTheme"
+              class="flex items-center gap-1.5 bg-navy-800/80 hover:bg-navy-700 border border-white/10 hover:border-cyan-400/40 rounded-full px-3 py-1 text-slate-300 hover:text-white transition-all text-xs font-medium cursor-pointer shadow-sm"
+              title="Ganti tampilan peta (Mode Gelap / OSM Standar awal)">
+        <span id="mapThemeIcon">🌙</span>
+        <span id="mapThemeLabel" class="hidden sm:inline">Mode Gelap</span>
+      </button>
+
+      <!-- Jumlah kapal aktif -->
+      <div class="stat-pill">
+        <span class="stat-label">KAPAL AKTIF</span>
+        <span id="totalShips" class="stat-value text-cyan-400">10</span>
+      </div>
+      <!-- Waktu update terakhir -->
+      <div class="stat-pill">
+        <span class="stat-label">UPDATE</span>
+        <span id="lastUpdated" class="stat-value">--:--:--</span>
+      </div>
+      <!-- Indikator LIVE -->
+      <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30
+                  rounded-full px-3 py-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-[10px] font-semibold text-emerald-400 tracking-widest">LIVE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN: PETA + SIDEBAR
+  ════════════════════════════════════════════════ -->
+  <main class="flex flex-1 overflow-hidden relative">
+
+    <!-- Peta Leaflet -->
+    <div id="map" class="flex-1 z-0"></div>
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside id="sidebar"
+      class="sidebar-panel absolute top-0 right-0 h-full z-10
+             flex flex-col w-72
+             bg-navy-900/85 backdrop-blur-md
+             border-l border-white/5
+             transition-transform duration-300 ease-in-out">
+
+      <!-- Sidebar Header -->
+      <div class="flex items-center justify-between px-4 py-3 border-b border-white/5 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="#22d3ee" stroke-width="2">
+            <path d="M2 20a2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1
+                     2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1
+                     2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1"/>
+            <path d="M4 18l4-10h8l4 10"/>
+            <path d="M12 4v4"/>
+          </svg>
+          <h2 class="text-sm font-semibold text-white">Armada Aktif</h2>
+        </div>
+        <button id="toggleSidebar"
+          class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10
+                 flex items-center justify-center transition-all duration-200"
+          title="Tutup / Buka Sidebar">
+          <svg id="toggleIcon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
       </div>
 
-      <div class="header-stats">
-        <div class="stat-badge">
-          <span class="stat-indicator online"></span>
-          <span class="stat-label">STATUS</span>
-          <span class="stat-value">LIVE SIMULASI</span>
-        </div>
-        <div class="stat-badge">
-          <span class="stat-label">TOTAL KAPAL</span>
-          <span class="stat-value" id="totalShips">10</span>
-        </div>
-        <div class="stat-badge">
-          <span class="stat-label">UPDATE TERAKHIR</span>
-          <span class="stat-value" id="lastUpdated">--:--:--</span>
-        </div>
-        <div class="stat-badge">
-          <span class="stat-label">INTERVAL POLLING</span>
-          <span class="stat-value">2 Detik</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- Kontainer Peta dan Panel Interaktif -->
-    <main class="main-content">
-      <!-- Peta Leaflet -->
-      <div id="map" class="map-container"></div>
-
-      <!-- Floating Sidebar: Daftar Kapal & Legend -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M2 20a2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1"/>
-              <path d="M4 18l4-10h8l4 10"/>
-              <path d="M12 4v4"/>
-            </svg>
-            <h2>Armada Kapal Aktif</h2>
-          </div>
-          <button id="toggleSidebar" class="sidebar-toggle-btn" title="Ciutkan / Rentangkan Panel">
-            <span class="toggle-icon">&minus;</span>
+      <!-- Filter Jenis Kapal -->
+      <div class="px-4 py-3 border-b border-white/5 flex-shrink-0">
+        <p class="text-[10px] text-slate-500 font-semibold tracking-widest uppercase mb-2">
+          Filter Jenis Kapal
+        </p>
+        <div class="grid grid-cols-2 gap-1.5">
+          <!-- tombol filter dibuat dinamis oleh app.js -->
+          <button data-filter="ferry"
+            class="filter-btn active text-[11px] font-semibold py-1.5 px-2 rounded-lg
+                   flex items-center gap-1.5 transition-all duration-200 border">
+            <span class="w-2 h-2 rounded-full bg-[#22d3ee]"></span>Ferry
+          </button>
+          <button data-filter="cargo"
+            class="filter-btn active text-[11px] font-semibold py-1.5 px-2 rounded-lg
+                   flex items-center gap-1.5 transition-all duration-200 border">
+            <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>Cargo
+          </button>
+          <button data-filter="tanker"
+            class="filter-btn active text-[11px] font-semibold py-1.5 px-2 rounded-lg
+                   flex items-center gap-1.5 transition-all duration-200 border">
+            <span class="w-2 h-2 rounded-full bg-[#ef4444]"></span>Tanker
+          </button>
+          <button data-filter="tug"
+            class="filter-btn active text-[11px] font-semibold py-1.5 px-2 rounded-lg
+                   flex items-center gap-1.5 transition-all duration-200 border">
+            <span class="w-2 h-2 rounded-full bg-[#22c55e]"></span>Tug
           </button>
         </div>
+      </div>
 
-        <!-- Tipe Kapal Legend -->
-        <div class="legend-bar">
-          <div class="legend-item"><span class="badge-dot ferry"></span> Ferry</div>
-          <div class="legend-item"><span class="badge-dot cargo"></span> Cargo</div>
-          <div class="legend-item"><span class="badge-dot tanker"></span> Tanker</div>
-          <div class="legend-item"><span class="badge-dot tug"></span> Tug</div>
+      <!-- Daftar Kapal -->
+      <div id="shipListContainer"
+        class="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin">
+        <!-- Loading state -->
+        <div id="loadingState"
+          class="flex flex-col items-center justify-center h-full gap-3 py-10">
+          <div class="w-10 h-10 border-2 border-cyan-500/30 border-t-cyan-400
+                      rounded-full animate-spin"></div>
+          <p class="text-xs text-slate-500">Memuat armada kapal AIS...</p>
         </div>
+      </div>
+    </aside>
 
-        <!-- Daftar Kapal Real-time -->
-        <div class="ship-list-container" id="shipListContainer">
-          <div class="loading-state">Memuat armada kapal AIS...</div>
-        </div>
-      </aside>
-    </main>
-  </div>
+    <!-- Tombol buka sidebar saat collapsed -->
+    <button id="openSidebarBtn"
+      class="absolute top-4 right-4 z-20 hidden
+             w-9 h-9 rounded-xl bg-navy-800/90 backdrop-blur-sm
+             border border-white/10 shadow-glass
+             flex items-center justify-center
+             hover:bg-navy-700/90 transition-all duration-200">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="#22d3ee" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+    </button>
+
+  </main>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Socket.io Client -->
   <script src="/socket.io/socket.io.js"></script>
-  <!-- Main Application Script -->
-  <script src="app.js"></script>
+  <!-- App Script -->
+  <script src="app.js?v=3"></script>
 </body>
 </html>
