@@ -35,82 +35,47 @@ const map = L.map('map', {
 // Kontrol zoom pojok kiri atas
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-// Layer Tile: CartoDB Dark (gelap), OSM Standar (awal minggu 1-2), Satelit Esri
-const tileDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-  subdomains: 'abcd',
-  maxZoom: 19
-});
-
+// Layer Tile OpenStreetMap Standar (100% GRATIS & BEBAS API KEY, persis seperti Minggu 1 & 2)
 const tileOSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19
-});
+}).addTo(map);
 
+// Citra Satelit Esri (bebas API key)
 const tileSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
   attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
   maxZoom: 18
 });
 
-// Default layer: CartoDB Dark Matter (tema gelap nautikal)
-tileDark.addTo(map);
-let activeTile = 'dark';
-
-// Kontrol layer Leaflet di kiri bawah (tidak tertutup sidebar kanan)
+// Kontrol Layer Leaflet di kiri bawah (pilihan: OSM Standar & Satelit)
 L.control.layers({
-  '🌙 Dark Matter': tileDark,
-  '🗺️ OSM Standar (Awal)': tileOSM,
-  '🛰️ Satelit Esri': tileSat
+  '🗺️ Peta Standar (OSM)': tileOSM,
+  '🛰️ Citra Satelit': tileSat
 }, null, { position: 'bottomleft' }).addTo(map);
 
-// Sinkronisasi pergantian layer dari Leaflet control ke tombol header
-map.on('baselayerchange', (e) => {
-  if (e.layer === tileOSM) {
-    activeTile = 'osm';
-    updateThemeButtonUI(true);
-  } else if (e.layer === tileDark) {
-    activeTile = 'dark';
-    updateThemeButtonUI(false);
-  } else {
-    activeTile = 'sat';
-    updateThemeButtonUI(false, '🛰️', 'Peta Satelit');
-  }
-});
+// ─── Mode Gelap (via CSS Filter — 100% Bebas API Key) ──────────────────
+const mapEl = document.getElementById('map');
+const toggleMapThemeBtn = document.getElementById('toggleMapTheme');
+const mapThemeIcon = document.getElementById('mapThemeIcon');
+const mapThemeLabel = document.getElementById('mapThemeLabel');
 
-function updateThemeButtonUI(isOSM, customIcon, customLabel) {
-  const btnIcon = document.getElementById('mapThemeIcon');
-  const btnLabel = document.getElementById('mapThemeLabel');
-  if (customIcon && customLabel) {
-    if (btnIcon) btnIcon.textContent = customIcon;
-    if (btnLabel) btnLabel.textContent = customLabel;
-    return;
-  }
-  if (isOSM) {
-    if (btnIcon) btnIcon.textContent = '🌙';
-    if (btnLabel) btnLabel.textContent = 'Peta Dark Mode';
+let isDark = false;
+
+function toggleMapTheme() {
+  isDark = !isDark;
+  if (isDark) {
+    mapEl.classList.add('map-dark-theme');
+    if (mapThemeIcon) mapThemeIcon.textContent = '☀️';
+    if (mapThemeLabel) mapThemeLabel.textContent = 'Mode Terang (OSM)';
   } else {
-    if (btnIcon) btnIcon.textContent = '🗺️';
-    if (btnLabel) btnLabel.textContent = 'Peta Standar (OSM)';
+    mapEl.classList.remove('map-dark-theme');
+    if (mapThemeIcon) mapThemeIcon.textContent = '🌙';
+    if (mapThemeLabel) mapThemeLabel.textContent = 'Mode Gelap';
   }
 }
 
-// Tombol cepat di header (Peta Standar OSM / Dark Mode)
-const toggleMapThemeBtn = document.getElementById('toggleMapTheme');
 if (toggleMapThemeBtn) {
-  toggleMapThemeBtn.addEventListener('click', () => {
-    if (activeTile === 'dark') {
-      map.removeLayer(tileDark);
-      tileOSM.addTo(map);
-      activeTile = 'osm';
-      updateThemeButtonUI(true);
-    } else {
-      map.removeLayer(tileOSM);
-      if (map.hasLayer(tileSat)) map.removeLayer(tileSat);
-      tileDark.addTo(map);
-      activeTile = 'dark';
-      updateThemeButtonUI(false);
-    }
-  });
+  toggleMapThemeBtn.addEventListener('click', toggleMapTheme);
 }
 
 /* ─── 2. Definisi Ukuran Ikon per Tipe Kapal ──────────────────────────── */

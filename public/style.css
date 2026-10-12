@@ -31,6 +31,12 @@
   font-family: 'Inter', sans-serif !important;
 }
 
+/* Mode Gelap murni untuk OpenStreetMap via CSS filter (100% BEBAS API KEY & WATERMARK) */
+#map.map-dark-theme .leaflet-tile-pane {
+  filter: brightness(0.6) invert(1) contrast(2.8) hue-rotate(200deg) saturate(0.35) brightness(0.7);
+  transition: filter 0.3s ease;
+}
+
 /* Popup kaca gelap */
 .leaflet-popup-content-wrapper {
   background: rgba(6, 15, 43, 0.92) !important;

@@ -40,7 +40,7 @@
   </script>
 
   <!-- Custom CSS (animasi & overrides Leaflet) -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body class="bg-navy-950 text-slate-100 font-sans h-screen overflow-hidden flex flex-col">
@@ -84,12 +84,12 @@
 
     <!-- Stats & Map Toggle -->
     <div class="flex items-center gap-2 flex-wrap">
-      <!-- Toggle Tema Peta (Dark / OSM Awal) -->
+      <!-- Toggle Tema Peta (Mode Gelap / OSM Standar awal) -->
       <button id="toggleMapTheme"
               class="flex items-center gap-1.5 bg-navy-800/80 hover:bg-navy-700 border border-white/10 hover:border-cyan-400/40 rounded-full px-3 py-1 text-slate-300 hover:text-white transition-all text-xs font-medium cursor-pointer shadow-sm"
-              title="Ganti tampilan peta (Tema Gelap / OSM Standar awal)">
-        <span id="mapThemeIcon">🗺️</span>
-        <span id="mapThemeLabel" class="hidden sm:inline">Peta Standar (OSM)</span>
+              title="Ganti tampilan peta (Mode Gelap / OSM Standar awal)">
+        <span id="mapThemeIcon">🌙</span>
+        <span id="mapThemeLabel" class="hidden sm:inline">Mode Gelap</span>
       </button>
 
       <!-- Jumlah kapal aktif -->
@@ -215,6 +215,6 @@
   <!-- Socket.io Client -->
   <script src="/socket.io/socket.io.js"></script>
   <!-- App Script -->
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
