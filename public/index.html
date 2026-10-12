@@ -82,8 +82,16 @@
       </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats & Map Toggle -->
     <div class="flex items-center gap-2 flex-wrap">
+      <!-- Toggle Tema Peta (Dark / OSM Awal) -->
+      <button id="toggleMapTheme"
+              class="flex items-center gap-1.5 bg-navy-800/80 hover:bg-navy-700 border border-white/10 hover:border-cyan-400/40 rounded-full px-3 py-1 text-slate-300 hover:text-white transition-all text-xs font-medium cursor-pointer shadow-sm"
+              title="Ganti tampilan peta (Tema Gelap / OSM Standar awal)">
+        <span id="mapThemeIcon">🗺️</span>
+        <span id="mapThemeLabel" class="hidden sm:inline">Peta Standar (OSM)</span>
+      </button>
+
       <!-- Jumlah kapal aktif -->
       <div class="stat-pill">
         <span class="stat-label">KAPAL AKTIF</span>

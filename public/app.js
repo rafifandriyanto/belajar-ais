@@ -35,13 +35,83 @@ const map = L.map('map', {
 // Kontrol zoom pojok kiri atas
 L.control.zoom({ position: 'topleft' }).addTo(map);
 
-// Tile gelap Stadia Maps - Alidade Smooth Dark (gratis, tanpa API key)
-// Alternatif CartoDB yang tidak lagi gratis
-L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> ' +
-               '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  maxZoom: 20
-}).addTo(map);
+// Layer Tile: CartoDB Dark (gelap), OSM Standar (awal minggu 1-2), Satelit Esri
+const tileDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
+});
+
+const tileOSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19
+});
+
+const tileSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+  maxZoom: 18
+});
+
+// Default layer: CartoDB Dark Matter (tema gelap nautikal)
+tileDark.addTo(map);
+let activeTile = 'dark';
+
+// Kontrol layer Leaflet di kiri bawah (tidak tertutup sidebar kanan)
+L.control.layers({
+  '🌙 Dark Matter': tileDark,
+  '🗺️ OSM Standar (Awal)': tileOSM,
+  '🛰️ Satelit Esri': tileSat
+}, null, { position: 'bottomleft' }).addTo(map);
+
+// Sinkronisasi pergantian layer dari Leaflet control ke tombol header
+map.on('baselayerchange', (e) => {
+  if (e.layer === tileOSM) {
+    activeTile = 'osm';
+    updateThemeButtonUI(true);
+  } else if (e.layer === tileDark) {
+    activeTile = 'dark';
+    updateThemeButtonUI(false);
+  } else {
+    activeTile = 'sat';
+    updateThemeButtonUI(false, '🛰️', 'Peta Satelit');
+  }
+});
+
+function updateThemeButtonUI(isOSM, customIcon, customLabel) {
+  const btnIcon = document.getElementById('mapThemeIcon');
+  const btnLabel = document.getElementById('mapThemeLabel');
+  if (customIcon && customLabel) {
+    if (btnIcon) btnIcon.textContent = customIcon;
+    if (btnLabel) btnLabel.textContent = customLabel;
+    return;
+  }
+  if (isOSM) {
+    if (btnIcon) btnIcon.textContent = '🌙';
+    if (btnLabel) btnLabel.textContent = 'Peta Dark Mode';
+  } else {
+    if (btnIcon) btnIcon.textContent = '🗺️';
+    if (btnLabel) btnLabel.textContent = 'Peta Standar (OSM)';
+  }
+}
+
+// Tombol cepat di header (Peta Standar OSM / Dark Mode)
+const toggleMapThemeBtn = document.getElementById('toggleMapTheme');
+if (toggleMapThemeBtn) {
+  toggleMapThemeBtn.addEventListener('click', () => {
+    if (activeTile === 'dark') {
+      map.removeLayer(tileDark);
+      tileOSM.addTo(map);
+      activeTile = 'osm';
+      updateThemeButtonUI(true);
+    } else {
+      map.removeLayer(tileOSM);
+      if (map.hasLayer(tileSat)) map.removeLayer(tileSat);
+      tileDark.addTo(map);
+      activeTile = 'dark';
+      updateThemeButtonUI(false);
+    }
+  });
+}
 
 /* ─── 2. Definisi Ukuran Ikon per Tipe Kapal ──────────────────────────── */
 // Kapal kecil besar menggambarkan proporsi: cargo & tanker panjang, tug pendek gemuk
@@ -368,3 +438,63 @@ function expandSidebar() {
 
 if (toggleBtn)  toggleBtn.addEventListener('click', collapseSidebar);
 if (openBtn)    openBtn.addEventListener('click', expandSidebar);
+
+/* ─── 11. Marker Pelabuhan Tanjung Perak (PostgreSQL /api/ports) ──────── */
+const portMarkersLayer = L.layerGroup().addTo(map);
+
+async function loadPortMarkers() {
+  try {
+    const res = await fetch('/api/ports');
+    if (!res.ok) return;
+    const json = await res.json();
+    const ports = json.data || [];
+
+    ports.forEach((port) => {
+      const lat = parseFloat(port.lat);
+      const lon = parseFloat(port.lon);
+      if (isNaN(lat) || isNaN(lon)) return;
+
+      const portIcon = L.divIcon({
+        className: 'port-marker-wrapper',
+        html: `
+          <div class="port-marker-pin" title="${port.name}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="3"/>
+              <line x1="12" y1="8" x2="12" y2="22"/>
+              <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
+            </svg>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+      });
+
+      const marker = L.marker([lat, lon], { icon: portIcon });
+      marker.bindPopup(`
+        <div class="p-2 min-w-[200px]">
+          <div class="flex items-center gap-2 mb-1.5 pb-1 border-b border-white/10">
+            <span class="text-base">⚓</span>
+            <div>
+              <div class="text-xs font-bold text-sky-400">${port.name}</div>
+              <div class="text-[9px] text-slate-400">Pelabuhan / Terminal</div>
+            </div>
+          </div>
+          <div class="text-[11px] text-slate-300 space-y-0.5">
+            <div><span class="text-slate-400">Latitude:</span> ${lat.toFixed(4)}°</div>
+            <div><span class="text-slate-400">Longitude:</span> ${lon.toFixed(4)}°</div>
+          </div>
+          <div class="mt-2 pt-1 border-t border-white/5 text-[9px] text-emerald-400/90 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+            PostgreSQL: tabel ports (ID #${port.id})
+          </div>
+        </div>
+      `);
+      portMarkersLayer.addLayer(marker);
+    });
+  } catch (err) {
+    console.warn('Gagal memuat data pelabuhan:', err);
+  }
+}
+
+loadPortMarkers();
