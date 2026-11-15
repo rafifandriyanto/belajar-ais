@@ -13,9 +13,14 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
+// Koneksi idle yang putus (mis. server DB restart) tidak boleh crash proses
+pool.on('error', (err) => {
+  console.warn('Koneksi PostgreSQL idle bermasalah:', err.message);
+});
+
 /**
  * Membuat tabel ships dan ports jika belum ada (CREATE TABLE IF NOT EXISTS).
- * Dipanggil sekali saat server pertama kali menyala.
+ * Dipanggil HANYA oleh db/seed.js — server tidak mengubah schema saat start.
  */
 async function initTables() {
   // Tabel ships: menyimpan data statis kapal (MMSI, nama, tipe armada)
@@ -37,7 +42,7 @@ async function initTables() {
     )
   `);
 
-  console.log('🐘 Tabel PostgreSQL (ships, ports) siap digunakan');
+  console.log('Tabel PostgreSQL (ships, ports) siap digunakan');
 }
 
 module.exports = { pool, initTables };

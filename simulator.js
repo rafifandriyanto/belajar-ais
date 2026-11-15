@@ -1,277 +1,136 @@
 /**
- * simulator.js - Simulator Pergerakan Kapal AIS Virtual
- * Area: Selat Madura / Pelabuhan Tanjung Perak, Surabaya
+ * simulator.js — Dinamika pergerakan kapal AIS virtual.
+ * Data statis (nama, tipe, rute, kecepatan) berasal dari data/fleet.js;
+ * file ini hanya menghitung posisi, heading, dan status.
+ *
+ * Fisika: kecepatan knot dikonversi ke m/detik, pergerakan berbasis
+ * delta-time (bukan per-tick), dan jarak dihitung di bola bumi
+ * (haversine + destination point) sehingga bujur terkoreksi cos(lat).
  */
 
-// Menghitung bearing (sudut arah kapal dalam derajat 0-359)
+const KNOTS_TO_MS = 0.514444;
+const EARTH_R = 6371000;
+
+const toRad = (d) => (d * Math.PI) / 180;
+const toDeg = (r) => (r * 180) / Math.PI;
+
+/** Bearing (derajat 0–359) dari titik 1 ke titik 2. */
 function calculateBearing(lat1, lon1, lat2, lon2) {
-  const toRad = (deg) => (deg * Math.PI) / 180;
-  const toDeg = (rad) => (rad * 180) / Math.PI;
-
-  const dLon = toRad(lon2 - lon1);
-  const phi1 = toRad(lat1);
-  const phi2 = toRad(lat2);
-
-  const y = Math.sin(dLon) * Math.cos(phi2);
-  const x =
-    Math.cos(phi1) * Math.sin(phi2) -
-    Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLon);
-
-  const bearing = (toDeg(Math.atan2(y, x)) + 360) % 360;
-  return Math.round(bearing);
+  const p1 = toRad(lat1);
+  const p2 = toRad(lat2);
+  const dl = toRad(lon2 - lon1);
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  return Math.round((toDeg(Math.atan2(y, x)) + 360) % 360);
 }
 
-// 10 Kapal Virtual di Alur Pelayaran Selat Madura & Tanjung Perak
-const ships = [
-  {
-    mmsi: '525001001',
-    name: 'KM Dharma Kencana VII',
-    type: 'ferry',
-    speed: 13.5,
-    heading: 0,
-    route: [
-      [-7.1955, 112.7395],
-      [-7.1850, 112.7340],
-      [-7.1750, 112.7270],
-      [-7.1685, 112.7225]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.1955,
-    lon: 112.7395
-  },
-  {
-    mmsi: '525001002',
-    name: 'KMP Gili Iyang',
-    type: 'ferry',
-    speed: 11.2,
-    heading: 0,
-    route: [
-      [-7.1688, 112.7230],
-      [-7.1765, 112.7285],
-      [-7.1860, 112.7350],
-      [-7.1948, 112.7402]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.1688,
-    lon: 112.7230
-  },
-  {
-    mmsi: '525002001',
-    name: 'Meratus Surabaya',
-    type: 'cargo',
-    speed: 14.8,
-    heading: 0,
-    route: [
-      [-7.2075, 112.6860],
-      [-7.1880, 112.7050],
-      [-7.1650, 112.7180],
-      [-7.1350, 112.7160]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.2075,
-    lon: 112.6860
-  },
-  {
-    mmsi: '525002002',
-    name: 'Tanto Sejahtera',
-    type: 'cargo',
-    speed: 12.4,
-    heading: 0,
-    route: [
-      [-7.2025, 112.7340],
-      [-7.1920, 112.7480],
-      [-7.1860, 112.7660],
-      [-7.1820, 112.7950]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.2025,
-    lon: 112.7340
-  },
-  {
-    mmsi: '525002003',
-    name: 'SPIL Nirmala',
-    type: 'cargo',
-    speed: 15.0,
-    heading: 0,
-    route: [
-      [-7.1320, 112.7145],
-      [-7.1580, 112.7175],
-      [-7.1820, 112.7260],
-      [-7.2010, 112.7325]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.1320,
-    lon: 112.7145
-  },
-  {
-    mmsi: '525003001',
-    name: 'Pertamina Pride',
-    type: 'tanker',
-    speed: 10.5,
-    heading: 0,
-    route: [
-      [-7.2005, 112.7290],
-      [-7.1780, 112.7210],
-      [-7.1540, 112.7150],
-      [-7.1280, 112.7120]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.2005,
-    lon: 112.7290
-  },
-  {
-    mmsi: '525003002',
-    name: 'Gas Arjuna',
-    type: 'tanker',
-    speed: 9.8,
-    heading: 0,
-    route: [
-      [-7.1970, 112.7420],
-      [-7.1880, 112.7560],
-      [-7.1840, 112.7750],
-      [-7.1790, 112.8050]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.1970,
-    lon: 112.7420
-  },
-  {
-    mmsi: '525004001',
-    name: 'TB Bima Perkasa',
-    type: 'tug',
-    speed: 7.5,
-    heading: 0,
-    route: [
-      [-7.2040, 112.7310],
-      [-7.2010, 112.7350],
-      [-7.1970, 112.7330],
-      [-7.1990, 112.7280]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.2040,
-    lon: 112.7310
-  },
-  {
-    mmsi: '525004002',
-    name: 'TB Tanjung Perak Satu',
-    type: 'tug',
-    speed: 8.0,
-    heading: 0,
-    route: [
-      [-7.1920, 112.7370],
-      [-7.1870, 112.7330],
-      [-7.1820, 112.7300],
-      [-7.1880, 112.7350]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.1920,
-    lon: 112.7370
-  },
-  {
-    mmsi: '525001003',
-    name: 'KM Kirana IX',
-    type: 'ferry',
-    speed: 12.0,
-    heading: 0,
-    route: [
-      [-7.1985, 112.7360],
-      [-7.1910, 112.7490],
-      [-7.1875, 112.7720],
-      [-7.1860, 112.7910]
-    ],
-    targetIndex: 1,
-    direction: 1,
-    lat: -7.1985,
-    lon: 112.7360
-  }
-];
-
-// Inisialisasi heading awal untuk tiap kapal
-ships.forEach((ship) => {
-  const target = ship.route[ship.targetIndex];
-  ship.heading = calculateBearing(ship.lat, ship.lon, target[0], target[1]);
-});
-
-/**
- * Memperbarui posisi seluruh kapal 1 langkah menuju waypoint target
- */
-function updateShips() {
-  ships.forEach((ship) => {
-    const target = ship.route[ship.targetIndex];
-    const targetLat = target[0];
-    const targetLon = target[1];
-
-    const dLat = targetLat - ship.lat;
-    const dLon = targetLon - ship.lon;
-    const distance = Math.hypot(dLat, dLon);
-
-    // Faktor step per pembaruan (disesuaikan dengan kecepatan dalam knot)
-    // 1 knot setara pergerakan kecil realistis di peta tiap 2 detik
-    const step = ship.speed * 0.000035;
-
-    if (distance <= step || distance === 0) {
-      // Tiba di waypoint target
-      ship.lat = targetLat;
-      ship.lon = targetLon;
-
-      // Geser ke waypoint berikutnya atau balik arah jika sudah di ujung rute
-      const nextIndex = ship.targetIndex + ship.direction;
-      if (nextIndex >= ship.route.length) {
-        ship.direction = -1;
-        ship.targetIndex = ship.route.length - 2;
-      } else if (nextIndex < 0) {
-        ship.direction = 1;
-        ship.targetIndex = 1;
-      } else {
-        ship.targetIndex = nextIndex;
-      }
-
-      // Hitung heading menuju target baru
-      const newTarget = ship.route[ship.targetIndex];
-      ship.heading = calculateBearing(ship.lat, ship.lon, newTarget[0], newTarget[1]);
-    } else {
-      // Maju mendekati target
-      const ratio = step / distance;
-      ship.lat += dLat * ratio;
-      ship.lon += dLon * ratio;
-
-      // Update heading
-      ship.heading = calculateBearing(ship.lat, ship.lon, targetLat, targetLon);
-    }
-
-    // Pembulatan presisi koordinat
-    ship.lat = Number(ship.lat.toFixed(6));
-    ship.lon = Number(ship.lon.toFixed(6));
-  });
+/** Jarak meter antar dua koordinat (haversine). */
+function distanceMeters(lat1, lon1, lat2, lon2) {
+  const p1 = toRad(lat1);
+  const p2 = toRad(lat2);
+  const dp = toRad(lat2 - lat1);
+  const dl = toRad(lon2 - lon1);
+  const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+  return 2 * EARTH_R * Math.asin(Math.sqrt(a));
 }
 
-/**
- * Mengambil data kapal publik (sesuai spesifikasi PRD)
- */
-function getShips() {
-  return ships.map((ship) => ({
+/** Titik baru setelah bergerak distM meter pada bearing tertentu. */
+function destinationPoint(lat, lon, bearingDeg, distM) {
+  const d = distM / EARTH_R;
+  const t = toRad(bearingDeg);
+  const p1 = toRad(lat);
+  const l1 = toRad(lon);
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(t));
+  const l2 = l1 + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return [toDeg(p2), ((toDeg(l2) + 540) % 360) - 180];
+}
+
+// ─── State dinamika ────────────────────────────────────────────────────────
+let state = [];
+let clockMs = Date.now(); // clock simulasi, dimajukan oleh updateShips
+
+/** Bangun state awal dari data fleet (posisi = waypoint pertama). */
+function initSimulator(fleet) {
+  state = fleet.map((ship) => ({
     mmsi: ship.mmsi,
-    name: ship.name,
-    type: ship.type,
-    lat: ship.lat,
-    lon: ship.lon,
-    speed: ship.speed,
-    heading: ship.heading,
-    route: ship.route
+    route: ship.route,
+    speedKn: ship.speedKn,
+    dwellSeconds: ship.dwellSeconds || 0,
+    // jitter stabil per kapal (±5%) supaya kecepatan tidak terlihat robotik
+    jitter: 0.95 + Math.random() * 0.1,
+    lat: ship.route[0][0],
+    lon: ship.route[0][1],
+    targetIndex: 1,
+    direction: 1,
+    dwellUntil: 0,
+    heading: calculateBearing(ship.route[0][0], ship.route[0][1], ship.route[1][0], ship.route[1][1]),
   }));
 }
 
+/**
+ * Majukan seluruh kapal sejauh dtSeconds detik waktu nyata.
+ * nowMs dipakai untuk menghitung masa sandar (dwell) di terminal.
+ */
+function updateShips(dtSeconds, nowMs = Date.now()) {
+  clockMs = nowMs;
+  for (const ship of state) {
+    if (nowMs < ship.dwellUntil) continue; // masih sandar di terminal
+
+    const target = ship.route[ship.targetIndex];
+    const remaining = distanceMeters(ship.lat, ship.lon, target[0], target[1]);
+    const step = ship.speedKn * KNOTS_TO_MS * dtSeconds * ship.jitter;
+
+    if (remaining <= step) {
+      // Tiba di waypoint
+      ship.lat = target[0];
+      ship.lon = target[1];
+
+      const nextIndex = ship.targetIndex + ship.direction;
+      if (nextIndex >= ship.route.length || nextIndex < 0) {
+        // Ujung rute: sandar sebentar lalu balik arah
+        ship.dwellUntil = nowMs + ship.dwellSeconds * 1000;
+        ship.direction *= -1;
+        ship.targetIndex = ship.targetIndex + ship.direction;
+      } else {
+        ship.targetIndex = nextIndex;
+      }
+    } else {
+      const bearing = calculateBearing(ship.lat, ship.lon, target[0], target[1]);
+      const [lat, lon] = destinationPoint(ship.lat, ship.lon, bearing, step);
+      ship.lat = lat;
+      ship.lon = lon;
+    }
+
+    const newTarget = ship.route[ship.targetIndex];
+    ship.heading = calculateBearing(ship.lat, ship.lon, newTarget[0], newTarget[1]);
+  }
+}
+
+/** Snapshot dinamika publik (tanpa data statis — itu tugas services/fleet). */
+function getShips() {
+  const now = clockMs;
+  return state.map((s) => {
+    const moored = now < s.dwellUntil;
+    return {
+      mmsi: s.mmsi,
+      lat: Number(s.lat.toFixed(6)),
+      lon: Number(s.lon.toFixed(6)),
+      heading: s.heading,
+      speed: moored ? 0 : Number((s.speedKn * s.jitter).toFixed(1)),
+      status: moored ? 'moored' : 'underway',
+    };
+  });
+}
+
+/** Akses state internal — hanya untuk unit test. */
+const _state = () => state;
+
 module.exports = {
-  ships,
+  calculateBearing,
+  distanceMeters,
+  destinationPoint,
+  initSimulator,
   updateShips,
-  getShips
+  getShips,
+  _state,
 };

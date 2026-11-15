@@ -1,11 +1,13 @@
 {
   "name": "belajar-ais-dashboard",
-  "version": "1.0.0",
-  "description": "Dashboard Monitoring Kapal AIS (Simulasi) - Minggu 1 Selat Madura & Tanjung Perak",
+  "version": "2.0.0",
+  "description": "Real-time AIS vessel tracking simulation — Selat Madura & Tanjung Perak (Express, Socket.io, PostgreSQL, MongoDB, Leaflet)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "seed": "node db/seed.js",
+    "test": "node --test"
   },
   "keywords": [
     "ais",
