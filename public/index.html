@@ -31,7 +31,7 @@
           <line x1="17" y1="12" x2="21" y2="12"/>
         </svg>
       </div>
-      <div>
+      <div class="brand-text">
         <div class="brand-title">AIS VTS CONSOLE</div>
         <div class="brand-sub">SELAT MADURA · TANJUNG PERAK</div>
       </div>
@@ -47,7 +47,7 @@
 
       <div class="stat">
         <span class="stat-label">Kapal Aktif</span>
-        <span id="totalShips" class="stat-value accent">—</span>
+        <span id="totalShips" class="stat-value accent">--</span>
       </div>
       <div class="stat update-stat">
         <span class="stat-label">Update</span>
@@ -65,8 +65,18 @@
       </button>
 
       <span id="authUser" class="auth-user" hidden></span>
-      <button id="authBtn" class="btn">MASUK</button>
-      <button id="logoutBtn" class="btn" hidden>KELUAR</button>
+      <button id="authBtn" class="btn" aria-label="Masuk">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 3h7v18h-7"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>
+        </svg>
+        <span>MASUK</span>
+      </button>
+      <button id="logoutBtn" class="btn" hidden aria-label="Keluar">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 3H3v18h7"/><path d="M17 17l5-5-5-5"/><path d="M22 12H10"/>
+        </svg>
+        <span>KELUAR</span>
+      </button>
 
       <div id="connBadge" class="conn-badge online">
         <span class="conn-dot"></span>

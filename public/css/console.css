@@ -139,12 +139,15 @@ button {
   color: var(--accent);
   flex-shrink: 0;
 }
+.brand-text { min-width: 0; }
 .brand-title {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
   line-height: 1.2;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .brand-sub {
   font-family: var(--font-mono);
