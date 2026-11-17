@@ -125,6 +125,55 @@ function getShips() {
 /** Akses state internal — hanya untuk unit test. */
 const _state = () => state;
 
+/** Tambah kapal baru atau perbarui kapal ada (CRUD live, tanpa restart). */
+function upsertShip(def) {
+  const existing = state.find((s) => s.mmsi === def.mmsi);
+  if (existing) {
+    const routeChanged = JSON.stringify(existing.route) !== JSON.stringify(def.route);
+    existing.speedKn = def.speedKn;
+    existing.dwellSeconds = def.dwellSeconds || 0;
+    if (routeChanged) {
+      existing.route = def.route;
+      existing.lat = def.route[0][0];
+      existing.lon = def.route[0][1];
+      existing.targetIndex = 1;
+      existing.direction = 1;
+      existing.dwellUntil = 0;
+      existing.heading = calculateBearing(def.route[0][0], def.route[0][1], def.route[1][0], def.route[1][1]);
+    }
+    return existing;
+  }
+  const ship = {
+    mmsi: def.mmsi,
+    route: def.route,
+    speedKn: def.speedKn,
+    dwellSeconds: def.dwellSeconds || 0,
+    jitter: 0.95 + Math.random() * 0.1,
+    lat: def.route[0][0],
+    lon: def.route[0][1],
+    targetIndex: 1,
+    direction: 1,
+    dwellUntil: 0,
+    heading: calculateBearing(def.route[0][0], def.route[0][1], def.route[1][0], def.route[1][1]),
+  };
+  state.push(ship);
+  return ship;
+}
+
+/** Hapus kapal dari simulasi (riwayat Mongo dibiarkan, TTL membersihkan). */
+function removeShip(mmsi) {
+  const i = state.findIndex((s) => s.mmsi === mmsi);
+  if (i >= 0) state.splice(i, 1);
+  return i >= 0;
+}
+
+/** Input voyage untuk services/voyage (posisi + arah + sandar). */
+function getDynamics(mmsi) {
+  const s = state.find((x) => x.mmsi === mmsi);
+  if (!s) return null;
+  return { lat: s.lat, lon: s.lon, targetIndex: s.targetIndex, direction: s.direction, speedKn: s.speedKn, dwellUntil: s.dwellUntil };
+}
+
 module.exports = {
   calculateBearing,
   distanceMeters,
@@ -132,5 +181,8 @@ module.exports = {
   initSimulator,
   updateShips,
   getShips,
+  upsertShip,
+  removeShip,
+  getDynamics,
   _state,
 };
