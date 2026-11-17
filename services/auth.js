@@ -36,6 +36,9 @@ function createRateLimiter(max = 5, windowMs = 60000) {
   const hits = new Map();
   return {
     try(key, nowMs = Date.now()) {
+      if (hits.size > 500) {
+        for (const [k, r] of hits) if (nowMs - r.start >= windowMs) hits.delete(k);
+      }
       const rec = hits.get(key);
       if (!rec || nowMs - rec.start >= windowMs) {
         hits.set(key, { start: nowMs, n: 1 });

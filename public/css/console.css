@@ -27,6 +27,14 @@
   --tug: #7fd08a;
   --ok: #7fd08a;
   --err: #e0655d;
+  /* Varian ink untuk warna tipe/status saat dipakai sebagai TEKS;
+     palet terang meng-override dengan nilai lebih gelap (kontras >= 4.5). */
+  --ferry-ink: var(--ferry);
+  --cargo-ink: var(--cargo);
+  --tanker-ink: var(--tanker);
+  --tug-ink: var(--tug);
+  --ok-ink: var(--ok);
+  --err-ink: var(--err);
   --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --radius: 3px;
@@ -52,8 +60,10 @@ html[data-palette="amber"] {
 html[data-palette="chart"] {
   --bg: #f2efe6; --panel: #faf8f1; --panel-2: #ece8dc;
   --border: #d8d2c0; --border-hi: #b9b19a;
-  --text: #16232e; --text-dim: #4c5a66; --text-faint: #5d6b77;
+  --text: #16232e; --text-dim: #4c5a66; --text-faint: #56636f;
   --accent: #c8402f; --accent-ink: #fff6f2;
+  --ferry-ink: #1f648c; --cargo-ink: #7a5510; --tanker-ink: #a93227; --tug-ink: #26693a;
+  --ok-ink: #26693a; --err-ink: #a93227;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -188,9 +198,9 @@ button {
   letter-spacing: 0.12em;
 }
 .conn-dot { width: 6px; height: 6px; border-radius: 50%; }
-.conn-badge.online { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+.conn-badge.online { color: var(--ok-ink); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
 .conn-badge.online .conn-dot { background: var(--ok); animation: pulse 2s infinite; }
-.conn-badge.offline { color: var(--err); border-color: color-mix(in srgb, var(--err) 40%, transparent); }
+.conn-badge.offline { color: var(--err-ink); border-color: color-mix(in srgb, var(--err) 40%, transparent); }
 .conn-badge.offline .conn-dot { background: var(--err); }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
@@ -358,10 +368,10 @@ button {
   border-radius: 2px;
   flex-shrink: 0;
 }
-.type-tag.ferry { color: var(--ferry); }
-.type-tag.cargo { color: var(--cargo); }
-.type-tag.tanker { color: var(--tanker); }
-.type-tag.tug { color: var(--tug); }
+.type-tag.ferry { color: var(--ferry-ink); }
+.type-tag.cargo { color: var(--cargo-ink); }
+.type-tag.tanker { color: var(--tanker-ink); }
+.type-tag.tug { color: var(--tug-ink); }
 
 .ship-row-meta {
   display: flex;
@@ -375,7 +385,7 @@ button {
 }
 .ship-row-meta [data-el="speed"] { min-width: 58px; }
 .ship-row-meta [data-el="heading"] { min-width: 38px; }
-.ship-row-meta .moored { color: var(--cargo); }
+.ship-row-meta .moored { color: var(--cargo-ink); }
 .ship-row-meta .mmsi { margin-left: auto; color: var(--text-faint); }
 
 .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--ok); }
@@ -522,8 +532,8 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
 .detail-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .detail-title { font: 600 14px/1.3 var(--font-ui); color: var(--text); }
 .detail-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
-.btn.danger { color: var(--tanker); border-color: var(--border); }
-.btn.danger:hover { border-color: var(--tanker); color: var(--tanker); }
+.btn.danger { color: var(--tanker-ink); border-color: var(--border); }
+.btn.danger:hover { border-color: var(--tanker-ink); color: var(--tanker-ink); }
 
 /* ─── Modal & form ─────────────────────────────────────────────────────── */
 .modal {
@@ -560,7 +570,7 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
 .field input:focus-visible, .field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .field input:disabled { color: var(--faint); }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-3); }
-.form-err { color: var(--tanker); font: 500 11px/1.4 var(--font-ui); margin: 0 0 var(--sp-2); }
+.form-err { color: var(--tanker-ink); font: 500 11px/1.4 var(--font-ui); margin: 0 0 var(--sp-2); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
 .btn.primary:hover { border-color: var(--border-hi); color: var(--accent-ink); }
 .route-tools { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); flex-wrap: wrap; }
@@ -611,7 +621,7 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
 .port-marker-pin {
   width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--ferry);
+  color: var(--ferry-ink);
 }
 
 /* ─── Override Leaflet: flat console ───────────────────────────────────── */
@@ -668,16 +678,16 @@ input[type="range"]:focus-visible { outline-offset: 4px; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.popup-type.ferry { color: var(--ferry); }
-.popup-type.cargo { color: var(--cargo); }
-.popup-type.tanker { color: var(--tanker); }
-.popup-type.tug { color: var(--tug); }
+.popup-type.ferry { color: var(--ferry-ink); }
+.popup-type.cargo { color: var(--cargo-ink); }
+.popup-type.tanker { color: var(--tanker-ink); }
+.popup-type.tug { color: var(--tug-ink); }
 .popup-divider { border-top: 1px solid var(--border); margin: var(--sp-2) 0; }
 .popup-row { display: flex; justify-content: space-between; gap: var(--sp-4); padding: 2px 0; }
 .popup-row-label { font-size: 11px; color: var(--text-dim); }
 .popup-row-value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 11px; }
-.popup-row-value.ok { color: var(--ok); }
-.popup-row-value.moored { color: var(--cargo); }
+.popup-row-value.ok { color: var(--ok-ink); }
+.popup-row-value.moored { color: var(--cargo-ink); }
 
 /* ─── Scrollbar ────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; }

@@ -17,7 +17,9 @@ function parseCookies(req) {
   const out = {};
   for (const part of String(req.headers.cookie || '').split(';')) {
     const i = part.indexOf('=');
-    if (i > 0) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0) {
+      try { out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim()); } catch { /* cookie rusak: abaikan */ }
+    }
   }
   return out;
 }
@@ -63,15 +65,21 @@ function sameOrigin(req, res, next) {
   next();
 }
 
-function setSessionCookie(res, token) {
-  res.setHeader('Set-Cookie', `${A.COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}`);
+function setSessionCookie(res, token, secure = false) {
+  res.setHeader('Set-Cookie', `${A.COOKIE_NAME}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${MAX_AGE}${secure ? '; Secure' : ''}`);
 }
 
-async function startSession(res, userId) {
+async function startSession(res, userId, q = pool, secure = false) {
   const token = A.newToken();
-  await pool.query('INSERT INTO sessions (id, user_id, expires_at) VALUES ($1,$2,$3)', [A.hashToken(token), userId, A.sessionExpiry()]);
-  setSessionCookie(res, token);
+  await q.query('INSERT INTO sessions (id, user_id, expires_at) VALUES ($1,$2,$3)', [A.hashToken(token), userId, A.sessionExpiry()]);
+  setSessionCookie(res, token, secure);
 }
+
+// Sapuan sesi kedaluwarsa berkala (unref: tidak menahan proses/test)
+const sweep = setInterval(() => {
+  pool.query('DELETE FROM sessions WHERE expires_at <= now()').catch(() => {});
+}, 60000);
+sweep.unref();
 
 router.post('/register', sameOrigin, async (req, res) => {
   if (!limiter.try(req.ip)) return res.status(429).json({ status: 'error', message: 'Terlalu banyak percobaan, coba lagi semenit' });
@@ -80,16 +88,32 @@ router.post('/register', sameOrigin, async (req, res) => {
   if (!/^[a-z0-9._-]{3,24}$/.test(username)) return bad(res, 'username: 3-24 karakter a-z 0-9 . _ -');
   if (password.length < 8) return bad(res, 'password: minimal 8 karakter');
   try {
-    const dup = await pool.query('SELECT 1 FROM users WHERE username = $1', [username]);
-    if (dup.rows.length) return res.status(409).json({ status: 'error', message: 'Username sudah dipakai' });
-    const count = await pool.query('SELECT count(*)::int AS n FROM users');
-    const role = count.rows[0].n === 0 ? 'admin' : 'operator';
-    const ins = await pool.query(
-      'INSERT INTO users (username, password_hash, role) VALUES ($1,$2,$3) RETURNING id, username, role',
-      [username, A.hashPassword(password), role],
-    );
-    await startSession(res, ins.rows[0].id);
-    res.status(201).json({ status: 'success', data: ins.rows[0] });
+    // Transaksi + advisory lock: cek duplikat dan penentuan admin pertama
+    // atomik terhadap register bersamaan.
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SELECT pg_advisory_xact_lock(727272)');
+      const dup = await client.query('SELECT 1 FROM users WHERE username = $1', [username]);
+      if (dup.rows.length) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ status: 'error', message: 'Username sudah dipakai' });
+      }
+      const count = await client.query('SELECT count(*)::int AS n FROM users');
+      const role = count.rows[0].n === 0 ? 'admin' : 'operator';
+      const ins = await client.query(
+        'INSERT INTO users (username, password_hash, role) VALUES ($1,$2,$3) RETURNING id, username, role',
+        [username, A.hashPassword(password), role],
+      );
+      await startSession(res, ins.rows[0].id, client, req.secure);
+      await client.query('COMMIT');
+      res.status(201).json({ status: 'success', data: ins.rows[0] });
+    } catch {
+      await client.query('ROLLBACK').catch(() => {});
+      pgDown(res);
+    } finally {
+      client.release();
+    }
   } catch {
     pgDown(res);
   }
@@ -105,7 +129,7 @@ router.post('/login', sameOrigin, async (req, res) => {
       return res.status(401).json({ status: 'error', message: 'Username atau password salah' });
     }
     await pool.query('DELETE FROM sessions WHERE user_id = $1 AND expires_at <= now()', [rows[0].id]);
-    await startSession(res, rows[0].id);
+    await startSession(res, rows[0].id, pool, req.secure);
     res.json({ status: 'success', data: { id: rows[0].id, username: rows[0].username, role: rows[0].role } });
   } catch {
     pgDown(res);
@@ -117,7 +141,7 @@ router.post('/logout', sameOrigin, async (req, res) => {
   try {
     if (tok) await pool.query('DELETE FROM sessions WHERE id = $1', [A.hashToken(tok)]);
   } catch { /* sesi tetap dibersihkan di client */ }
-  res.setHeader('Set-Cookie', `${A.COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`);
+  res.setHeader('Set-Cookie', `${A.COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${req.secure ? '; Secure' : ''}`);
   res.json({ status: 'success' });
 });
 

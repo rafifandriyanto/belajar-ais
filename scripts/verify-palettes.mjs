@@ -27,12 +27,23 @@ for (let i = 0; i < 4; i++) {
   const tokens = await evaluate(cdp, `(() => {
     const cs = getComputedStyle(document.documentElement);
     return { dim: cs.getPropertyValue('--text-dim').trim(), panel: cs.getPropertyValue('--panel').trim(),
-             faint: cs.getPropertyValue('--text-faint').trim(), accent: cs.getPropertyValue('--accent').trim() };
+             panel2: cs.getPropertyValue('--panel-2').trim(),
+             faint: cs.getPropertyValue('--text-faint').trim(), accent: cs.getPropertyValue('--accent').trim(),
+             inks: ['--ferry-ink', '--cargo-ink', '--tanker-ink', '--tug-ink', '--ok-ink', '--err-ink']
+               .map((k) => cs.getPropertyValue(k).trim()) };
   })()`);
   const ratio = contrast(tokens.dim, tokens.panel);
   const ratioFaint = contrast(tokens.faint, tokens.panel);
   console.log(`${name}: dim/panel ${ratio}:1, faint/panel ${ratioFaint}:1, accent ${tokens.accent}`);
-  if (Number(ratio) < 4.5) console.log(`  !! kontras dim di bawah 4.5`);
+  if (Number(ratio) < 4.5) throw new Error(`kontras dim di bawah 4.5 (${name})`);
+  // Teks berwarna (type-tag, conn-badge, form-err) harus >= 4.5 di panel & panel-2
+  for (const ink of tokens.inks) {
+    for (const bg of [tokens.panel, tokens.panel2]) {
+      const r = Number(contrast(ink, bg));
+      if (r < 4.5) throw new Error(`kontras ink ${ink} pada ${bg} = ${r} (${name})`);
+    }
+  }
+  console.log(`  ink teks aman: ${tokens.inks.join(' ')}`);
   await shot(cdp, `docs/screenshots/v21-palette-${name}.png`);
   await evaluate(cdp, `document.getElementById('paletteBtn').click()`);
   await sleep(1500);

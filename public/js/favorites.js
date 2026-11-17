@@ -1,12 +1,18 @@
-/** favorites.js — Favorit & follow per browser (localStorage), tanpa auth. */
+/** favorites.js — Favorit & follow per browser (localStorage), tanpa auth.
+ * Semua akses storage dibungkus try/catch: mode privat / kuota penuh tidak
+ * boleh mematikan app, fitur ini degrade jadi non-persisten. */
 const FAVS_KEY = 'ais.favs';
 const FOLLOW_KEY = 'ais.follow';
 
+const read = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const write = (k, v) => { try { localStorage.setItem(k, v); } catch { /* non-persisten */ } };
+const drop = (k) => { try { localStorage.removeItem(k); } catch { /* non-persisten */ } };
+
 export function createFavorites() {
   let favs = new Set();
-  try { favs = new Set(JSON.parse(localStorage.getItem(FAVS_KEY) || '[]')); } catch { favs = new Set(); }
-  let follow = localStorage.getItem(FOLLOW_KEY) || null;
-  const save = () => localStorage.setItem(FAVS_KEY, JSON.stringify([...favs]));
+  try { favs = new Set(JSON.parse(read(FAVS_KEY) || '[]')); } catch { favs = new Set(); }
+  let follow = read(FOLLOW_KEY) || null;
+  const save = () => write(FAVS_KEY, JSON.stringify([...favs]));
   return {
     has: (mmsi) => favs.has(mmsi),
     toggle(mmsi) {
@@ -18,7 +24,7 @@ export function createFavorites() {
     getFollow: () => follow,
     setFollow(mmsi) {
       follow = follow === mmsi ? null : mmsi;
-      if (follow) localStorage.setItem(FOLLOW_KEY, follow); else localStorage.removeItem(FOLLOW_KEY);
+      if (follow) write(FOLLOW_KEY, follow); else drop(FOLLOW_KEY);
       return follow;
     },
   };

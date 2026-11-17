@@ -11,6 +11,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
   let current = null;
   let voyageAt = 0;
   let deleteArmed = false;
+  let invoker = null;
 
   const row = (label, value) => `<div class="popup-row"><span class="popup-row-label">${label}</span><span class="popup-row-value">${value}</span></div>`;
 
@@ -33,7 +34,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
       ${s.imo ? row('IMO', escapeHtml(s.imo)) : ''}
       ${s.callSign ? row('Call sign', escapeHtml(s.callSign)) : ''}
       ${s.flag ? row('Bendera', escapeHtml(s.flag)) : ''}
-      ${s.lengthM ? row('Panjang / lebar', `${Number(s.lengthM).toFixed(1)} m / ${Number(s.beamM).toFixed(1)} m`) : ''}
+      ${s.lengthM ? row('Panjang / lebar', [s.lengthM, s.beamM].map((x) => (Number.isFinite(Number(x)) ? `${Number(x).toFixed(1)} m` : '--')).join(' / ')) : ''}
       <div class="popup-divider"></div>
       <div class="detail-live" data-el="live"></div>
       <div class="popup-divider"></div>
@@ -70,6 +71,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
   async function open(mmsi) {
     const r = await fetch(`/api/ships/${mmsi}`);
     if (!r.ok) return false;
+    invoker = document.activeElement;
     current = (await r.json()).data;
     current.dyn = getDyn ? getDyn(mmsi) : null;
     voyageAt = Date.now();
@@ -78,7 +80,12 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
     el.querySelector('[data-el="close"]').focus();
     return true;
   }
-  function close() { el.hidden = true; current = null; }
+  function close() {
+    el.hidden = true;
+    current = null;
+    if (invoker && document.contains(invoker)) invoker.focus();
+    invoker = null;
+  }
   function refresh(ships) {
     if (!current || el.hidden) return;
     const d = ships.find((x) => x.mmsi === current.mmsi);

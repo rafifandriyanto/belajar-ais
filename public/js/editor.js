@@ -10,6 +10,7 @@ export function createEditor(map, { onSaved }) {
   let layers = [];
   let editing = null;
   let handler = null;
+  let onKey = null;
 
   const accent = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3fd8c7';
   function redraw() {
@@ -40,10 +41,13 @@ export function createEditor(map, { onSaved }) {
   function cleanup() {
     if (handler) map.off('click', handler);
     handler = null;
+    if (onKey) document.removeEventListener('keydown', onKey);
+    onKey = null;
     layers.forEach((l) => map.removeLayer(l));
     layers = [];
   }
   function open(ship) {
+    cleanup(); // buka ulang saat dialog masih terbuka: jangan tumpuk handler
     editing = ship || null;
     points = ship?.route ? ship.route.map((p) => [p[0], p[1]]) : [];
     fill(ship);
@@ -51,13 +55,16 @@ export function createEditor(map, { onSaved }) {
     if (!dlg.open) dlg.show();
     handler = (e) => { points.push([Number(e.latlng.lat.toFixed(6)), Number(e.latlng.lng.toFixed(6))]); redraw(); };
     map.on('click', handler);
+    // Dialog non-modal tidak menerima cancel native: Esc harus menutup manual
+    onKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
     redraw();
   }
   function close() {
     cleanup();
     dlg.close();
   }
-  // Esc / penutupan native dialog tetap membersihkan layer peta
+  // Penutupan native dialog tetap membersihkan layer peta
   dlg.addEventListener('close', cleanup);
   document.getElementById('editorClose').addEventListener('click', close);
   document.getElementById('edUndo').addEventListener('click', () => { points.pop(); redraw(); });

@@ -13,8 +13,11 @@ function validateShipPayload(b, { partial = false } = {}) {
     if (!isValidMmsi(String(b.mmsi ?? ''))) errs.push('mmsi: harus 9 digit angka');
   }
   if (!partial || has('name')) {
-    const n = String(b.name ?? '').trim();
-    if (n.length < 1 || n.length > 100) errs.push('name: 1-100 karakter');
+    if (typeof b.name !== 'string') errs.push('name: harus teks');
+    else {
+      const n = b.name.trim();
+      if (n.length < 1 || n.length > 100) errs.push('name: 1-100 karakter');
+    }
   }
   if (!partial || has('type')) {
     if (!TYPES.includes(b.type)) errs.push('type: ferry/cargo/tanker/tug');
@@ -40,7 +43,15 @@ function validateShipPayload(b, { partial = false } = {}) {
     const d = Number(b.dwellSeconds);
     if (!Number.isFinite(d) || d < 0 || d > 3600) errs.push('dwellSeconds: 0-3600');
   }
-  if (has('destination') && String(b.destination).length > 60) errs.push('destination: maks 60 karakter');
+  for (const [k, max] of [['imo', 12], ['callSign', 12], ['flag', 40], ['destination', 60]]) {
+    if (has(k) && (typeof b[k] !== 'string' || b[k].length > max)) errs.push(`${k}: teks maks ${max} karakter`);
+  }
+  for (const [k, max] of [['lengthM', 400], ['beamM', 100]]) {
+    if (has(k)) {
+      const v = Number(b[k]);
+      if (!Number.isFinite(v) || v <= 0 || v > max) errs.push(`${k}: angka 1-${max}`);
+    }
+  }
   return errs;
 }
 

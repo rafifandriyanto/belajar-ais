@@ -249,6 +249,10 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
         map.removeLayer(obj.trail);
         obj.row.remove();
         markers.delete(mmsi);
+        if (mmsi === selected) {
+          selected = null;
+          if (selRing) { map.removeLayer(selRing); selRing = null; }
+        }
       }
     }
 

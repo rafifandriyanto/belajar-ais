@@ -21,6 +21,20 @@ const router = express.Router();
 
 const emitFleet = (req) => req.app.get('io')?.emit('fleet:update', getMergedShips());
 
+/** Serialisasi mutasi per MMSI: PUT/DELETE tidak boleh interleave dan
+ * meninggalkan "kapal hantu" (ada di cache+simulator, tanpa baris DB). */
+const locks = new Map();
+function withLock(key, fn) {
+  const prev = locks.get(key) || Promise.resolve();
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  locks.set(key, gate);
+  return prev.then(fn).finally(() => {
+    release();
+    if (locks.get(key) === gate) locks.delete(key);
+  });
+}
+
 const serverError = (res, err) => {
   console.error('API error:', err);
   res.status(500).json({ status: 'error', message: 'Terjadi kesalahan pada server' });
@@ -39,59 +53,86 @@ router.get('/ships/:mmsi', (req, res) => {
   res.json({ status: 'success', data: { ...s, voyage } });
 });
 
-router.post('/ships', requireAuth, sameOrigin, async (req, res) => {
+router.post('/ships', requireAuth, sameOrigin, (req, res) => withLock(req.body?.mmsi, async () => {
   const errs = validateShipPayload(req.body || {});
   if (errs.length) return res.status(400).json({ status: 'error', message: errs.join('; ') });
   const b = req.body;
+  const client = await pool.connect();
   try {
-    const dup = await pool.query('SELECT 1 FROM ships WHERE mmsi = $1', [b.mmsi]);
-    if (dup.rows.length) return res.status(409).json({ status: 'error', message: 'MMSI sudah terdaftar' });
-    await pool.query(
+    await client.query('BEGIN');
+    const dup = await client.query('SELECT 1 FROM ships WHERE mmsi = $1', [b.mmsi]);
+    if (dup.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ status: 'error', message: 'MMSI sudah terdaftar' });
+    }
+    await client.query(
       `INSERT INTO ships (mmsi,name,type,imo,call_sign,flag,length_m,beam_m,destination,owner_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [b.mmsi, b.name.trim(), b.type, b.imo || null, b.callSign || null, b.flag || null, b.lengthM ?? null, b.beamM ?? null, b.destination || null, req.user.id],
     );
-    await pool.query('INSERT INTO routes (mmsi,waypoints,speed_kn,dwell_s) VALUES ($1,$2,$3,$4)', [b.mmsi, JSON.stringify(b.route), b.speedKn, b.dwellSeconds || 0]);
-    setStatic({ ...b, name: b.name.trim(), owner_id: req.user.id });
-    sim.upsertShip({ mmsi: b.mmsi, route: b.route, speedKn: b.speedKn, dwellSeconds: b.dwellSeconds || 0 });
-    emitFleet(req);
-    res.status(201).json({ status: 'success', data: getStatic(b.mmsi) });
+    await client.query('INSERT INTO routes (mmsi,waypoints,speed_kn,dwell_s) VALUES ($1,$2,$3,$4)', [b.mmsi, JSON.stringify(b.route), b.speedKn, b.dwellSeconds || 0]);
+    await client.query('COMMIT');
   } catch {
-    res.status(503).json({ status: 'error', message: 'Database kapal belum tersedia' });
+    await client.query('ROLLBACK').catch(() => {});
+    return res.status(503).json({ status: 'error', message: 'Database kapal belum tersedia' });
+  } finally {
+    client.release();
   }
-});
+  setStatic({ ...b, name: b.name.trim(), owner_id: req.user.id });
+  sim.upsertShip({ mmsi: b.mmsi, route: b.route, speedKn: b.speedKn, dwellSeconds: b.dwellSeconds || 0 });
+  emitFleet(req);
+  res.status(201).json({ status: 'success', data: getStatic(b.mmsi) });
+}));
 
-router.put('/ships/:mmsi', requireAuth, sameOrigin, async (req, res) => {
+router.put('/ships/:mmsi', requireAuth, sameOrigin, (req, res) => withLock(req.params.mmsi, async () => {
   const errs = validateShipPayload(req.body || {}, { partial: true });
   if (errs.length) return res.status(400).json({ status: 'error', message: errs.join('; ') });
+  const b = req.body;
+  const client = await pool.connect();
+  let cur, route, speedKn, dwell;
   try {
-    const { rows } = await pool.query('SELECT * FROM ships WHERE mmsi = $1', [req.params.mmsi]);
-    if (!rows.length) return res.status(404).json({ status: 'error', message: 'Kapal tidak dikenal' });
-    if (!canEditShip(req.user, rows[0])) return res.status(403).json({ status: 'error', message: 'Hanya pemilik atau admin yang boleh mengubah kapal ini' });
-    const b = req.body;
-    const cur = rows[0];
-    await pool.query(
+    await client.query('BEGIN');
+    const { rows } = await client.query('SELECT * FROM ships WHERE mmsi = $1', [req.params.mmsi]);
+    if (!rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ status: 'error', message: 'Kapal tidak dikenal' });
+    }
+    if (!canEditShip(req.user, rows[0])) {
+      await client.query('ROLLBACK');
+      return res.status(403).json({ status: 'error', message: 'Hanya pemilik atau admin yang boleh mengubah kapal ini' });
+    }
+    cur = rows[0];
+    await client.query(
       `UPDATE ships SET name=$1, type=$2, imo=$3, call_sign=$4, flag=$5, length_m=$6, beam_m=$7, destination=$8 WHERE mmsi=$9`,
       [b.name ?? cur.name, b.type ?? cur.type, b.imo ?? cur.imo, b.callSign ?? cur.call_sign, b.flag ?? cur.flag, b.lengthM ?? cur.length_m, b.beamM ?? cur.beam_m, b.destination ?? cur.destination, cur.mmsi],
     );
-    const route = b.route || (await pool.query('SELECT waypoints FROM routes WHERE mmsi=$1', [cur.mmsi])).rows[0]?.waypoints;
-    const speedKn = b.speedKn ?? Number((await pool.query('SELECT speed_kn FROM routes WHERE mmsi=$1', [cur.mmsi])).rows[0]?.speed_kn ?? 12);
-    const dwell = b.dwellSeconds ?? (await pool.query('SELECT dwell_s FROM routes WHERE mmsi=$1', [cur.mmsi])).rows[0]?.dwell_s ?? 0;
-    await pool.query(
+    const rr = (await client.query('SELECT waypoints, speed_kn, dwell_s FROM routes WHERE mmsi=$1', [cur.mmsi])).rows[0];
+    route = b.route || rr?.waypoints;
+    speedKn = b.speedKn ?? Number(rr?.speed_kn ?? 12);
+    dwell = b.dwellSeconds ?? rr?.dwell_s ?? 0;
+    if (!Array.isArray(route) || route.length < 2) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ status: 'error', message: 'route: minimal 2 titik' });
+    }
+    await client.query(
       `INSERT INTO routes (mmsi,waypoints,speed_kn,dwell_s) VALUES ($1,$2,$3,$4)
        ON CONFLICT (mmsi) DO UPDATE SET waypoints=EXCLUDED.waypoints, speed_kn=EXCLUDED.speed_kn, dwell_s=EXCLUDED.dwell_s`,
       [cur.mmsi, JSON.stringify(route), speedKn, dwell],
     );
-    setStatic({ mmsi: cur.mmsi, name: b.name ?? cur.name, type: b.type ?? cur.type, imo: b.imo ?? cur.imo, callSign: b.callSign ?? cur.call_sign, flag: b.flag ?? cur.flag, lengthM: b.lengthM ?? cur.length_m, beamM: b.beamM ?? cur.beam_m, destination: b.destination ?? cur.destination, route, speedKn, dwellSeconds: dwell });
-    sim.upsertShip({ mmsi: cur.mmsi, route, speedKn, dwellSeconds: dwell });
-    emitFleet(req);
-    res.json({ status: 'success', data: getStatic(cur.mmsi) });
+    await client.query('COMMIT');
   } catch {
-    res.status(503).json({ status: 'error', message: 'Database kapal belum tersedia' });
+    await client.query('ROLLBACK').catch(() => {});
+    return res.status(503).json({ status: 'error', message: 'Database kapal belum tersedia' });
+  } finally {
+    client.release();
   }
-});
+  setStatic({ mmsi: cur.mmsi, name: b.name ?? cur.name, type: b.type ?? cur.type, imo: b.imo ?? cur.imo, callSign: b.callSign ?? cur.call_sign, flag: b.flag ?? cur.flag, lengthM: b.lengthM ?? cur.length_m, beamM: b.beamM ?? cur.beam_m, destination: b.destination ?? cur.destination, route, speedKn, dwellSeconds: dwell });
+  sim.upsertShip({ mmsi: cur.mmsi, route, speedKn, dwellSeconds: dwell });
+  emitFleet(req);
+  res.json({ status: 'success', data: getStatic(cur.mmsi) });
+}));
 
-router.delete('/ships/:mmsi', requireAuth, sameOrigin, async (req, res) => {
+router.delete('/ships/:mmsi', requireAuth, sameOrigin, (req, res) => withLock(req.params.mmsi, async () => {
   try {
     const { rows } = await pool.query('SELECT mmsi, owner_id FROM ships WHERE mmsi = $1', [req.params.mmsi]);
     if (!rows.length) return res.status(404).json({ status: 'error', message: 'Kapal tidak dikenal' });
@@ -104,7 +145,7 @@ router.delete('/ships/:mmsi', requireAuth, sameOrigin, async (req, res) => {
   } catch {
     res.status(503).json({ status: 'error', message: 'Database kapal belum tersedia' });
   }
-});
+}));
 
 router.get('/ships/:mmsi/history', async (req, res) => {
   const { mmsi } = req.params;
