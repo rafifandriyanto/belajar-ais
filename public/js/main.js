@@ -7,6 +7,8 @@ import { createFleet } from './fleet.js';
 import { createHistory } from './history.js';
 import { createFavorites } from './favorites.js';
 import { createDetail } from './detail.js';
+import { createAuth } from './auth.js';
+import { createEditor } from './editor.js';
 import { connectSocket } from './socket.js';
 import { fmtTime } from './util.js';
 
@@ -21,7 +23,8 @@ const history = createHistory(map);
 const favorites = createFavorites();
 let lastShips = [];
 
-// canEdit/onEdit diisi modul auth+editor (Task 9); sementara read-only.
+// Diisi setelah auth & editor dibuat (di bawah); closure aman karena
+// hanya dipanggil saat interaksi, bukan saat konstruksi.
 let authCanEdit = () => false;
 let editorOpen = () => {};
 const detail = createDetail(document.querySelector('.main'), {
@@ -171,6 +174,26 @@ openBtn.addEventListener('click', () => {
   openBtn.classList.remove('visible');
 });
 
+// ─── Auth + editor kapal ────────────────────────────────────────────────────
+const auth = createAuth({
+  onChange: (u) => {
+    const userEl = document.getElementById('authUser');
+    userEl.hidden = !u;
+    userEl.textContent = u ? `${u.username} · ${u.role}` : '';
+    document.getElementById('authBtn').hidden = !!u;
+    document.getElementById('logoutBtn').hidden = !u;
+    document.getElementById('addShipBtn').hidden = !u;
+    if (detail.isOpen()) detail.rerender();
+  },
+});
+authCanEdit = (ship) => auth.canEdit(ship);
+document.getElementById('authBtn').addEventListener('click', () => auth.open('login'));
+document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
+
+const editor = createEditor(map, { onSaved: () => toast('Kapal disimpan, live di peta') });
+editorOpen = (ship) => editor.open(ship);
+document.getElementById('addShipBtn').addEventListener('click', () => editor.open(null));
+
 // ─── Tema peta + palet konsol ───────────────────────────────────────────────
 let dark = true;
 const themeLabel = document.getElementById('mapThemeLabel');
@@ -195,3 +218,5 @@ document.getElementById('paletteBtn').addEventListener('click', () => {
   const cur = document.documentElement.dataset.palette || 'sonar';
   applyPalette(PALETTES[(PALETTES.indexOf(cur) + 1) % PALETTES.length]);
 });
+// Refresh sesi paling akhir: onChange menyentuh detail & tombol yang sudah ada
+auth.refresh();

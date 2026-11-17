@@ -5,6 +5,7 @@ export function connectSocket({ onUpdate, onStatus }) {
   let firstConnect = true;
 
   socket.on('ships:update', (ships) => onUpdate(ships));
+  socket.on('fleet:update', (ships) => onUpdate(ships));
 
   socket.on('connect', () => {
     onStatus(true, firstConnect);

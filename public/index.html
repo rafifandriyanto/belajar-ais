@@ -64,6 +64,10 @@
         </svg>
       </button>
 
+      <span id="authUser" class="auth-user" hidden></span>
+      <button id="authBtn" class="btn">MASUK</button>
+      <button id="logoutBtn" class="btn" hidden>KELUAR</button>
+
       <div id="connBadge" class="conn-badge online">
         <span class="conn-dot"></span>
         <span id="connLabel">LIVE</span>
@@ -78,6 +82,9 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <span class="sidebar-title">ARMADA AKTIF<b id="sidebarCount">0</b></span>
+        <button id="addShipBtn" class="icon-btn" hidden title="Tambah kapal" aria-label="Tambah kapal">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
         <button id="toggleSidebar" class="icon-btn" title="Tutup sidebar" aria-label="Tutup sidebar">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <path d="M9 18l6-6-6-6"/>
@@ -147,6 +154,56 @@
       <div id="historyMsg" class="history-msg" style="display:none"></div>
     </section>
   </main>
+
+  <dialog id="authDialog" class="modal">
+    <form id="authForm" method="dialog">
+      <div class="modal-head">
+        <span class="modal-title" id="authTitle">MASUK OPERATOR</span>
+        <button type="button" class="icon-btn" id="authClose" aria-label="Tutup">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-tabs">
+        <button type="button" class="btn" id="tabLogin" aria-pressed="true">MASUK</button>
+        <button type="button" class="btn" id="tabRegister" aria-pressed="false">DAFTAR</button>
+      </div>
+      <label class="field"><span>Username</span><input id="authUsername" autocomplete="username" required minlength="3" maxlength="24"></label>
+      <label class="field"><span>Password</span><input id="authPassword" type="password" autocomplete="current-password" required minlength="8"></label>
+      <p id="authErr" class="form-err" role="alert" hidden></p>
+      <button class="btn primary" id="authSubmit" type="submit">MASUK</button>
+    </form>
+  </dialog>
+
+  <dialog id="editorDialog" class="modal wide">
+    <form id="editorForm" method="dialog">
+      <div class="modal-head">
+        <span class="modal-title" id="editorTitle">TAMBAH KAPAL</span>
+        <button type="button" class="icon-btn" id="editorClose" aria-label="Tutup">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="form-grid">
+        <label class="field"><span>Nama</span><input id="edName" required maxlength="100"></label>
+        <label class="field"><span>MMSI (9 digit)</span><input id="edMmsi" required pattern="\d{9}" inputmode="numeric"></label>
+        <label class="field"><span>Tipe</span><select id="edType"><option value="ferry">ferry</option><option value="cargo">cargo</option><option value="tanker">tanker</option><option value="tug">tug</option></select></label>
+        <label class="field"><span>Kecepatan (kn)</span><input id="edSpeed" type="number" min="1" max="30" step="0.1" value="12"></label>
+        <label class="field"><span>Sandar (detik)</span><input id="edDwell" type="number" min="0" max="3600" value="20"></label>
+        <label class="field"><span>Destination</span><input id="edDest" maxlength="60"></label>
+        <label class="field"><span>IMO</span><input id="edImo" maxlength="12"></label>
+        <label class="field"><span>Call sign</span><input id="edCall" maxlength="12"></label>
+        <label class="field"><span>Bendera</span><input id="edFlag" maxlength="40"></label>
+        <label class="field"><span>Panjang (m)</span><input id="edLen" type="number" min="1" step="0.1"></label>
+        <label class="field"><span>Lebar (m)</span><input id="edBeam" type="number" min="1" step="0.1"></label>
+      </div>
+      <div class="route-tools">
+        <span id="edRouteCount" class="history-count">0 titik, klik peta untuk menambah waypoint</span>
+        <button type="button" class="btn" id="edUndo">UNDO</button>
+        <button type="button" class="btn" id="edClear">CLEAR</button>
+      </div>
+      <p id="edErr" class="form-err" role="alert" hidden></p>
+      <button class="btn primary" id="edSubmit" type="submit">SIMPAN</button>
+    </form>
+  </dialog>
 
   <div id="toast" class="toast" role="status"></div>
 
