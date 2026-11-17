@@ -254,7 +254,9 @@ export function createFleet(map, { onSelect }) {
     const obj = markers.get(mmsi);
     if (obj && map.hasLayer(obj.marker)) {
       selRing = L.circleMarker(obj.marker.getLatLng(), {
-        radius: 18, color: '#ff7a29', weight: 1.5, opacity: 0.9,
+        radius: 18,
+        color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3fd8c7',
+        weight: 1.5, opacity: 0.9,
         fill: false, dashArray: '3 3', interactive: false,
       }).addTo(map);
       map.panTo(obj.marker.getLatLng(), { animate: true, duration: 0.6 });

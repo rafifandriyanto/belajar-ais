@@ -1,10 +1,10 @@
 /** util.js — helper format & keamanan DOM. */
 
 export const TYPE_COLORS = {
-  ferry: '#5cb8e8',
-  cargo: '#e8a33d',
-  tanker: '#e05d5d',
-  tug: '#4fc47f',
+  ferry: '#6fb7e8',
+  cargo: '#e8b04b',
+  tanker: '#e0655d',
+  tug: '#7fd08a',
 };
 
 /** Escape semua string dari server sebelum masuk innerHTML. */

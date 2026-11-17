@@ -119,7 +119,7 @@ export function createHistory(map) {
     const info = segmentInfo(i);
     if (!info) { readoutEl.textContent = ''; return; }
     readoutEl.innerHTML = info.gap
-      ? 'SOG <b>—</b> · HDG <b>—</b> (gap data)'
+      ? 'SOG <b>--</b> · HDG <b>--</b> (gap data)'
       : `SOG <b>${info.sog.toFixed(1)} kn</b> · HDG <b>${String(Math.round(info.hdg)).padStart(3, '0')}°</b>`;
   }
 
@@ -235,7 +235,7 @@ export function createHistory(map) {
         else dropped += kept.length;
       }
       if (points.length < 2) {
-        showMsg('Belum ada cukup riwayat — server menyimpan posisi tiap 10 detik, tunggu sebentar lalu klik lagi.');
+        showMsg('Belum ada cukup riwayat -- server menyimpan posisi tiap 10 detik, tunggu sebentar lalu klik lagi.');
         return;
       }
 
@@ -275,7 +275,7 @@ export function createHistory(map) {
       seekIndex(0);
       map.fitBounds(trackLine.getBounds(), { padding: [60, 60] });
     } catch {
-      showMsg('Gagal memuat riwayat — periksa koneksi server.');
+      showMsg('Gagal memuat riwayat -- periksa koneksi server.');
     }
   }
 

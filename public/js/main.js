@@ -103,11 +103,27 @@ openBtn.addEventListener('click', () => {
   openBtn.classList.remove('visible');
 });
 
-// ─── Tema peta ──────────────────────────────────────────────────────────────
+// ─── Tema peta + palet konsol ───────────────────────────────────────────────
 let dark = true;
 const themeLabel = document.getElementById('mapThemeLabel');
 document.getElementById('toggleMapTheme').addEventListener('click', () => {
   dark = !dark;
   setDark(dark);
   themeLabel.textContent = dark ? 'PETA GELAP' : 'PETA TERANG';
+});
+
+const PALETTES = ['sonar', 'phosphor', 'amber', 'chart'];
+function applyPalette(name, silent) {
+  document.documentElement.dataset.palette = name;
+  localStorage.setItem('ais.palette', name);
+  const light = name === 'chart';
+  dark = !light;
+  setDark(dark);
+  themeLabel.textContent = light ? 'PETA TERANG' : 'PETA GELAP';
+  if (!silent) toast(`Palet ${name} aktif`);
+}
+applyPalette(localStorage.getItem('ais.palette') || 'sonar', true);
+document.getElementById('paletteBtn').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.palette || 'sonar';
+  applyPalette(PALETTES[(PALETTES.indexOf(cur) + 1) % PALETTES.length]);
 });
