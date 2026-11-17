@@ -31,7 +31,7 @@ export function initMap() {
   // Strip status konsol: koordinat kursor, zoom, jam UTC, datum
   const statusEl = L.DomUtil.create('div', 'map-status');
   statusEl.innerHTML = `
-    <span>POS <b data-el="pos">—</b></span><span class="sep">|</span>
+    <span>POS <b data-el="pos">--</b></span><span class="sep">|</span>
     <span>Z <b data-el="zoom">${MAP_ZOOM}</b></span><span class="sep">|</span>
     <span><b data-el="clock">--:--:--</b> UTC</span><span class="sep">|</span>
     <span>WGS-84</span>`;
@@ -69,7 +69,7 @@ export function initMap() {
         const icon = L.divIcon({
           className: 'port-marker-wrapper',
           html: `<div class="port-marker-pin" title="${escapeHtml(port.name)}">
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5cb8e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                      <circle cx="12" cy="5" r="3"/>
                      <line x1="12" y1="8" x2="12" y2="22"/>
                      <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>

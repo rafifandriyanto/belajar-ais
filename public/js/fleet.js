@@ -4,7 +4,7 @@
  * event klik pakai delegation; trail pakai satu polyline per kapal.
  */
 
-import { escapeHtml, fmtCoord, TYPE_COLORS } from './util.js';
+import { escapeHtml, fmtCoord, TYPE_COLORS, matchShip } from './util.js';
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
@@ -64,12 +64,15 @@ function popupHtml(ship) {
 <div class="popup-row"><span class="popup-row-label">Lat / Lon</span><span class="popup-row-value">${fmtCoord(ship.lat)}, ${fmtCoord(ship.lon)}</span></div>`;
 }
 
-export function createFleet(map, { onSelect }) {
+export function createFleet(map, { onSelect, favorites, onToggleFav }) {
   const markers = new Map(); // mmsi → {marker, trail, history, data, row, els}
   const activeFilters = new Set(ALL_TYPES);
   let selected = null;
   let selRing = null; // lingkaran aksen penanda kapal terpilih di peta
   let fitted = false;
+  let query = '';
+  let favFilter = false;
+  let kbdIndex = -1;
 
   const listEl = document.getElementById('shipList');
   const emptyEl = document.createElement('div');
@@ -81,7 +84,14 @@ export function createFleet(map, { onSelect }) {
   // Event delegation: satu listener untuk seluruh daftar (klik + keyboard)
   listEl.addEventListener('click', (e) => {
     const row = e.target.closest('.ship-row');
-    if (row) onSelect(row.dataset.mmsi);
+    if (!row) return;
+    const star = e.target.closest('.fav-star');
+    if (star) {
+      e.stopPropagation();
+      onToggleFav(row.dataset.mmsi);
+      return;
+    }
+    onSelect(row.dataset.mmsi);
   });
   listEl.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -105,6 +115,9 @@ export function createFleet(map, { onSelect }) {
       <div class="ship-row-top">
         <span class="ship-name" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
         <span class="type-tag ${escapeHtml(ship.type)}">${escapeHtml(ship.type)}</span>
+        <button class="fav-star" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>
+        </button>
       </div>
       <div class="ship-row-meta">
         <span class="status-dot" data-el="dot"></span>
@@ -121,6 +134,7 @@ export function createFleet(map, { onSelect }) {
         speed: row.querySelector('[data-el="speed"]'),
         heading: row.querySelector('[data-el="heading"]'),
         status: row.querySelector('[data-el="status"]'),
+        fav: row.querySelector('[data-el="fav"]'),
       },
     };
   }
@@ -180,7 +194,7 @@ export function createFleet(map, { onSelect }) {
 
     for (const ship of ships) {
       seen.add(ship.mmsi);
-      const visible = activeFilters.has(ship.type);
+      const visible = activeFilters.has(ship.type) && (!favFilter || favorites?.has(ship.mmsi)) && matchShip(ship, query);
       if (visible) visibleCount++;
 
       let obj = markers.get(ship.mmsi);
@@ -217,6 +231,11 @@ export function createFleet(map, { onSelect }) {
           obj.els.dot.classList.toggle('moored', !!statusTxt);
         }
 
+        // Sinkron bintang favorit
+        const isFav = !!favorites?.has(ship.mmsi);
+        obj.els.fav.classList.toggle('on', isFav);
+        obj.els.fav.setAttribute('aria-pressed', String(isFav));
+
         // Ring kapal terpilih mengikuti posisi live
         if (ship.mmsi === selected && selRing) selRing.setLatLng([ship.lat, ship.lon]);
       }
@@ -230,9 +249,16 @@ export function createFleet(map, { onSelect }) {
         map.removeLayer(obj.trail);
         obj.row.remove();
         markers.delete(mmsi);
+        if (mmsi === selected) {
+          selected = null;
+          if (selRing) { map.removeLayer(selRing); selRing = null; }
+        }
       }
     }
 
+    if (visibleCount === 0) {
+      emptyEl.innerHTML = query ? '<span>Tidak ada kapal yang cocok dengan pencarian</span>' : '<span>Tidak ada kapal yang sesuai filter</span>';
+    }
     emptyEl.style.display = visibleCount === 0 ? 'flex' : 'none';
     document.getElementById('sidebarCount').textContent = visibleCount;
     return visibleCount;
@@ -254,7 +280,9 @@ export function createFleet(map, { onSelect }) {
     const obj = markers.get(mmsi);
     if (obj && map.hasLayer(obj.marker)) {
       selRing = L.circleMarker(obj.marker.getLatLng(), {
-        radius: 18, color: '#ff7a29', weight: 1.5, opacity: 0.9,
+        radius: 18,
+        color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3fd8c7',
+        weight: 1.5, opacity: 0.9,
         fill: false, dashArray: '3 3', interactive: false,
       }).addTo(map);
       map.panTo(obj.marker.getLatLng(), { animate: true, duration: 0.6 });
@@ -269,6 +297,23 @@ export function createFleet(map, { onSelect }) {
 
   const getName = (mmsi) => markers.get(mmsi)?.data?.name || mmsi;
   const getSelected = () => selected;
+  const getShip = (mmsi) => markers.get(mmsi)?.data;
 
-  return { update, toggleFilter, setSelected, getName, getSelected };
+  const allData = () => [...markers.values()].map((o) => o.data);
+  const visibleRows = () => [...markers.values()].filter((o) => !o.row.classList.contains('hidden')).map((o) => o.row);
+  function clearKbdClassOnly() { listEl.querySelectorAll('.kbd-active').forEach((r) => r.classList.remove('kbd-active')); }
+  function clearKbd() { kbdIndex = -1; clearKbdClassOnly(); }
+  function setSearch(q) { query = q; clearKbd(); return update(allData()); }
+  function setFavFilter(on) { favFilter = on; return update(allData()); }
+  function moveKbd(delta) {
+    const rows = visibleRows();
+    if (!rows.length) return;
+    kbdIndex = Math.min(Math.max(kbdIndex + delta, 0), rows.length - 1);
+    clearKbdClassOnly();
+    rows[kbdIndex].classList.add('kbd-active');
+    rows[kbdIndex].scrollIntoView({ block: 'nearest' });
+  }
+  function selectKbd() { const rows = visibleRows(); if (rows[kbdIndex]) onSelect(rows[kbdIndex].dataset.mmsi); }
+
+  return { update, toggleFilter, setSelected, getName, getSelected, getShip, setSearch, setFavFilter, moveKbd, selectKbd, clearKbd };
 }
