@@ -6,6 +6,7 @@ import { initMap } from './map.js';
 import { createFleet } from './fleet.js';
 import { createHistory } from './history.js';
 import { createFavorites } from './favorites.js';
+import { createDetail } from './detail.js';
 import { connectSocket } from './socket.js';
 import { fmtTime } from './util.js';
 
@@ -19,17 +20,43 @@ window.addEventListener('resize', () => map.invalidateSize());
 const history = createHistory(map);
 const favorites = createFavorites();
 let lastShips = [];
+
+// canEdit/onEdit diisi modul auth+editor (Task 9); sementara read-only.
+let authCanEdit = () => false;
+let editorOpen = () => {};
+const detail = createDetail(document.querySelector('.main'), {
+  favorites,
+  canEdit: (ship) => authCanEdit(ship),
+  getDyn: (mmsi) => fleet.getShip(mmsi),
+  onHistory: (mmsi) => history.open(mmsi, fleet.getName(mmsi)),
+  onEdit: (ship) => editorOpen(ship),
+  onDelete: async (mmsi) => {
+    const r = await fetch(`/api/ships/${mmsi}`, { method: 'DELETE' });
+    if (r.ok) { toast('Kapal dihapus'); detail.close(); } else toast((await r.json()).message);
+  },
+  onFollow: (mmsi) => {
+    const f = favorites.setFollow(mmsi);
+    toast(f ? 'Follow aktif, peta mengikuti kapal' : 'Follow dimatikan');
+  },
+});
+
 const fleet = createFleet(map, {
   onSelect: (mmsi) => {
     fleet.setSelected(mmsi);
-    history.open(mmsi, fleet.getName(mmsi));
+    detail.open(mmsi);
   },
   favorites,
   onToggleFav: (mmsi) => {
     const on = favorites.toggle(mmsi);
     toast(on ? 'Ditambahkan ke favorit' : 'Dihapus dari favorit');
     fleet.update(lastShips);
+    if (detail.isOpen()) detail.rerender();
   },
+});
+
+// Esc global: tutup drawer detail bila terbuka
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && detail.isOpen()) detail.close();
 });
 
 // ─── Toast ──────────────────────────────────────────────────────────────────
@@ -74,6 +101,7 @@ connectSocket({
       loadingRemoved = true;
     }
     const visible = fleet.update(ships);
+    detail.refresh(ships);
     totalEl.textContent = visible;
     updatedEl.textContent = fmtTime(Date.now());
     // Follow: peta mengikuti kapal favorit selama panel riwayat tidak terbuka
@@ -85,6 +113,7 @@ connectSocket({
     if (!deepLinkDone && deepLinkMmsi && ships.some((s) => s.mmsi === deepLinkMmsi)) {
       deepLinkDone = true;
       fleet.setSelected(deepLinkMmsi);
+      detail.open(deepLinkMmsi);
       history.open(deepLinkMmsi, fleet.getName(deepLinkMmsi), deepLinkOpts);
     }
   },
