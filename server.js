@@ -25,15 +25,15 @@ const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 
 const sim = require('./simulator');
-const { FLEET } = require('./data/fleet');
 const { pool } = require('./db/postgres');
-const { loadStaticFromPg, getMergedShips } = require('./services/fleet');
+const { loadStaticFromPg, getMergedShips, getStaticFleet } = require('./services/fleet');
 const apiRouter = require('./routes/api');
 const Position = require('./models/Position');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+app.set('io', io);
 
 const PORT = process.env.PORT || 3000;
 const SIM_INTERVAL_MS = 2000;
@@ -50,12 +50,13 @@ if (process.env.MONGODB_URI) {
 }
 
 // ─── HTTP ───────────────────────────────────────────────────────────────────
+app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/api/auth', require('./routes/auth').router);
 app.use('/api', apiRouter);
 app.use('/api', (req, res) => res.status(404).json({ status: 'error', message: 'Endpoint tidak ditemukan' }));
 
 // ─── Simulasi & broadcast ───────────────────────────────────────────────────
-sim.initSimulator(FLEET);
 let lastTick = Date.now();
 
 const simTimer = setInterval(() => {
@@ -116,8 +117,10 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 (async () => {
   const n = await loadStaticFromPg(pool);
   console.log(n > 0 ? `Data statis ${n} kapal dimuat dari PostgreSQL` : 'Data statis memakai fleet lokal');
+  const fleet = getStaticFleet().filter((s) => Array.isArray(s.route) && s.route.length >= 2);
+  sim.initSimulator(fleet);
   server.listen(PORT, () => {
     console.log(`AIS Monitor berjalan di http://localhost:${PORT}`);
-    console.log(`Area: Selat Madura & Tanjung Perak | ${FLEET.length} kapal | update ${SIM_INTERVAL_MS / 1000}s`);
+    console.log(`Area: Selat Madura & Tanjung Perak | ${fleet.length} kapal | update ${SIM_INTERVAL_MS / 1000}s`);
   });
 })();
