@@ -5,6 +5,7 @@
 import { initMap } from './map.js';
 import { createFleet } from './fleet.js';
 import { createHistory } from './history.js';
+import { createFavorites } from './favorites.js';
 import { connectSocket } from './socket.js';
 import { fmtTime } from './util.js';
 
@@ -16,10 +17,18 @@ requestAnimationFrame(() => map.invalidateSize());
 window.addEventListener('resize', () => map.invalidateSize());
 
 const history = createHistory(map);
+const favorites = createFavorites();
+let lastShips = [];
 const fleet = createFleet(map, {
   onSelect: (mmsi) => {
     fleet.setSelected(mmsi);
     history.open(mmsi, fleet.getName(mmsi));
+  },
+  favorites,
+  onToggleFav: (mmsi) => {
+    const on = favorites.toggle(mmsi);
+    toast(on ? 'Ditambahkan ke favorit' : 'Dihapus dari favorit');
+    fleet.update(lastShips);
   },
 });
 
@@ -59,6 +68,7 @@ let deepLinkDone = false;
 
 connectSocket({
   onUpdate: (ships) => {
+    lastShips = ships;
     if (!loadingRemoved) {
       document.getElementById('loadingState')?.remove();
       loadingRemoved = true;
@@ -66,6 +76,12 @@ connectSocket({
     const visible = fleet.update(ships);
     totalEl.textContent = visible;
     updatedEl.textContent = fmtTime(Date.now());
+    // Follow: peta mengikuti kapal favorit selama panel riwayat tidak terbuka
+    const f = favorites.getFollow();
+    if (f && !history.isOpen()) {
+      const s = ships.find((x) => x.mmsi === f);
+      if (s) map.panTo([s.lat, s.lon], { animate: true, duration: 0.5 });
+    }
     if (!deepLinkDone && deepLinkMmsi && ships.some((s) => s.mmsi === deepLinkMmsi)) {
       deepLinkDone = true;
       fleet.setSelected(deepLinkMmsi);
@@ -80,6 +96,29 @@ const utcEl = document.getElementById('utcClock');
 const tickUtc = () => { utcEl.textContent = new Date().toISOString().slice(11, 19); };
 tickUtc();
 setInterval(tickUtc, 1000);
+
+// ─── Search sidebar (debounce + keyboard) ───────────────────────────────────
+const searchEl = document.getElementById('shipSearch');
+let searchTimer = null;
+searchEl.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { totalEl.textContent = fleet.setSearch(searchEl.value); }, 120);
+});
+searchEl.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); fleet.moveKbd(1); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); fleet.moveKbd(-1); }
+  else if (e.key === 'Enter') { e.preventDefault(); fleet.selectKbd(); }
+  else if (e.key === 'Escape') { searchEl.value = ''; totalEl.textContent = fleet.setSearch(''); searchEl.blur(); }
+});
+
+// ─── Filter favorit ─────────────────────────────────────────────────────────
+document.getElementById('favFilter').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const on = !btn.classList.contains('active');
+  btn.classList.toggle('active', on);
+  btn.setAttribute('aria-pressed', String(on));
+  totalEl.textContent = fleet.setFavFilter(on);
+});
 
 // ─── Filter tipe kapal ──────────────────────────────────────────────────────
 document.querySelectorAll('.filter-btn').forEach((btn) => {

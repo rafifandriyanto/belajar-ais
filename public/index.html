@@ -85,11 +85,16 @@
         </button>
       </div>
 
+      <div class="search-row">
+        <input id="shipSearch" type="search" placeholder="Cari nama / MMSI" aria-label="Cari kapal berdasarkan nama atau MMSI" autocomplete="off">
+      </div>
+
       <div class="filter-grid">
         <button data-filter="ferry" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Ferry</button>
         <button data-filter="cargo" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Cargo</button>
         <button data-filter="tanker" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Tanker</button>
         <button data-filter="tug" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Tug</button>
+        <button id="favFilter" class="filter-btn fav-chip" aria-pressed="false"><span class="dot"></span>Favorit</button>
       </div>
 
       <div id="shipList" class="ship-list">

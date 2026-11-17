@@ -287,6 +287,30 @@ button {
 .filter-btn.active { color: var(--text); border-color: var(--border-hi); }
 .filter-btn:not(.active) .dot { background: var(--text-faint); }
 
+/* Search sidebar */
+.search-row { padding: var(--sp-2) var(--sp-3) 0; }
+.search-row input {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font: 500 12px/1.4 var(--font-ui);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius);
+}
+.search-row input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.search-row input::placeholder { color: var(--faint); }
+
+/* Favorit */
+.fav-star { margin-left: var(--sp-1); background: none; border: 0; color: var(--faint); cursor: pointer; padding: 2px; display: inline-flex; flex-shrink: 0; }
+.fav-star:hover { color: var(--text); }
+.fav-star.on { color: var(--accent); }
+.fav-star.on svg { fill: var(--accent); }
+.ship-row.kbd-active { border-color: var(--accent); }
+.fav-chip { grid-column: 1 / -1; }
+.fav-chip .dot { background: var(--accent); }
+.fav-chip:not(.active) .dot { background: var(--faint); }
+
 /* Daftar kapal */
 .ship-list { flex: 1; overflow-y: auto; }
 
@@ -309,6 +333,7 @@ button {
 }
 
 .ship-row-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.ship-row-top .ship-name { flex: 1; min-width: 0; }
 .ship-name {
   font-size: 12px;
   font-weight: 600;
