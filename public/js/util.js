@@ -15,8 +15,16 @@ export const escapeHtml = (s) =>
 
 export const fmtCoord = (n) => Number(n).toFixed(4);
 
-export const fmtTime = (d) =>
-  new Date(d).toLocaleTimeString('id-ID', { hour12: false });
+/** Jam lokal konsol (WIB) — satu notasi, titik dua, 24 jam. */
+export function fmtClock(d) {
+  const parts = new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    hourCycle: 'h23',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(new Date(d));
+  const v = (type) => parts.find((p) => p.type === type)?.value ?? '00';
+  return `${v('hour')}:${v('minute')}:${v('second')}`;
+}
 
 export const fmtSpeed = (kn) => `${Number(kn).toFixed(1)} kn`;
 

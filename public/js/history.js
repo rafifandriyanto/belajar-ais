@@ -3,14 +3,14 @@
  * Klik kapal → fetch riwayat → gambar track → slider/play memutar ulang.
  */
 
-import { escapeHtml, fmtTime } from './util.js';
+import { escapeHtml, fmtClock } from './util.js';
 
 const SPEEDS = [1, 4, 16];
 // Speed gate AIS: di lalu lintas pelabuhan, SOG > 30 kn dianggap spike anomali.
 const MAX_PLAUSIBLE_KN = 30;
 const MAX_GAP_S = 120;
 
-export function createHistory(map) {
+export function createHistory(map, { onModeChange } = {}) {
   const panel = document.getElementById('historyPanel');
   const body = document.getElementById('historyBody');
   const msg = document.getElementById('historyMsg');
@@ -26,6 +26,8 @@ export function createHistory(map) {
   const startEl = document.getElementById('historyStart');
   const endEl = document.getElementById('historyEnd');
   const readoutEl = document.getElementById('historyReadout');
+  const endNote = document.getElementById('historyEndNote');
+  const anomalyEl = document.getElementById('historyAnomaly');
 
   let points = [];
   let trackLine = null;
@@ -56,6 +58,7 @@ export function createHistory(map) {
     rafId = null;
     playIcon.innerHTML = '<polygon points="6 3 20 12 6 21"/>';
     playLabel.textContent = 'PLAY';
+    playBtn.setAttribute('aria-label', 'Putar riwayat');
   }
 
   /** Posisi interpolasi pada waktu t (epoch ms). */
@@ -128,8 +131,9 @@ export function createHistory(map) {
     if (!p) return;
     playheadMs = p.ts;
     playMarker.setLatLng([p.lat, p.lon]);
-    timeEl.textContent = fmtTime(p.ts);
+    timeEl.textContent = fmtClock(p.ts);
     slider.value = i;
+    slider.setAttribute('aria-valuetext', fmtClock(p.ts));
     paintSlider();
     updateReadout(i);
   }
@@ -138,11 +142,12 @@ export function createHistory(map) {
     const p = positionAt(t);
     playheadMs = t;
     playMarker.setLatLng([p.lat, p.lon]);
-    timeEl.textContent = fmtTime(t);
+    timeEl.textContent = fmtClock(t);
     // posisi slider ≈ index terdekat
     let idx = 0;
     while (idx < points.length - 1 && points[idx + 1].ts <= t) idx++;
     slider.value = idx;
+    slider.setAttribute('aria-valuetext', fmtClock(t));
     paintSlider();
     updateReadout(idx);
   }
@@ -156,6 +161,7 @@ export function createHistory(map) {
     if (playheadMs >= end) {
       seekTime(end);
       stopPlayback();
+      endNote.hidden = false;
       return;
     }
     seekTime(playheadMs);
@@ -172,18 +178,23 @@ export function createHistory(map) {
     if (playheadMs >= points[points.length - 1].ts) {
       playheadMs = points[0].ts; // ulangi dari awal
     }
+    endNote.hidden = true;
     playing = true;
     lastFrame = performance.now();
     playIcon.innerHTML = '<rect x="5" y="4" width="4" height="16"/><rect x="15" y="4" width="4" height="16"/>';
     playLabel.textContent = 'JEDA';
+    playBtn.setAttribute('aria-label', 'Jeda riwayat');
     rafId = requestAnimationFrame(frame);
   }
 
   async function open(mmsi, name, opts = {}) {
     stopPlayback();
+    endNote.hidden = true;
+    anomalyEl.hidden = true;
     clearLayers();
     openMmsi = mmsi;
     panel.classList.add('open');
+    onModeChange?.(true);
     shipEl.textContent = name;
     mmsiEl.textContent = `MMSI ${mmsi}`;
     showMsg('Memuat riwayat...');
@@ -199,7 +210,7 @@ export function createHistory(map) {
       if (openMmsi !== mmsi) return; // sudah pindah kapal lain
 
       if (!res.ok) {
-        showMsg(json.message || 'Riwayat tidak tersedia (MongoDB belum tersambung).');
+        showMsg(json.message || 'Riwayat posisi belum tersedia — database riwayat belum tersambung.');
         return;
       }
       const raw = (json.data || []).map((p) => ({
@@ -235,7 +246,7 @@ export function createHistory(map) {
         else dropped += kept.length;
       }
       if (points.length < 2) {
-        showMsg('Belum ada cukup riwayat -- server menyimpan posisi tiap 10 detik, tunggu sebentar lalu klik lagi.');
+        showMsg('Belum ada cukup riwayat — server menyimpan posisi tiap 10 detik, tunggu sebentar lalu klik lagi.');
         return;
       }
 
@@ -264,18 +275,21 @@ export function createHistory(map) {
 
       slider.min = 0;
       slider.max = points.length - 1;
-      countEl.textContent = dropped
-        ? `${points.length} titik · ${dropped} anomali dibuang`
-        : `${points.length} titik`;
-      countEl.title = dropped
-        ? 'Titik dengan kecepatan tak wajar (speed gate 30 kn) tidak dipakai untuk track/playback'
-        : '';
-      startEl.textContent = fmtTime(points[0].ts);
-      endEl.textContent = fmtTime(points[points.length - 1].ts);
+      countEl.textContent = `${points.length} titik`;
+      if (dropped) {
+        anomalyEl.textContent = `${dropped} titik dibuang (speed gate 30 kn)`;
+        anomalyEl.title = 'Titik dengan kecepatan tak wajar tidak dipakai untuk track/playback';
+        anomalyEl.hidden = false;
+      } else {
+        anomalyEl.textContent = '';
+        anomalyEl.hidden = true;
+      }
+      startEl.textContent = fmtClock(points[0].ts);
+      endEl.textContent = fmtClock(points[points.length - 1].ts);
       seekIndex(0);
       map.fitBounds(trackLine.getBounds(), { padding: [60, 60] });
     } catch {
-      showMsg('Gagal memuat riwayat -- periksa koneksi server.');
+      showMsg('Gagal memuat riwayat — periksa koneksi ke server lalu coba lagi.');
     }
   }
 
@@ -285,12 +299,15 @@ export function createHistory(map) {
     points = [];
     openMmsi = null;
     readoutEl.textContent = '';
+    anomalyEl.hidden = true;
     panel.classList.remove('open');
+    onModeChange?.(false);
   }
 
   // ─── Kontrol ────────────────────────────────────────────────────────────
   slider.addEventListener('input', () => {
     stopPlayback();
+    endNote.hidden = true;
     seekIndex(Number(slider.value));
   });
 
@@ -302,9 +319,10 @@ export function createHistory(map) {
   speedBtn.addEventListener('click', () => {
     speedIdx = (speedIdx + 1) % SPEEDS.length;
     speedBtn.textContent = `${SPEEDS[speedIdx]}×`;
+    speedBtn.setAttribute('aria-label', `Kecepatan playback ${SPEEDS[speedIdx]} kali`);
   });
 
   document.getElementById('historyClose').addEventListener('click', close);
 
-  return { open, close, isOpen };
+  return { open, close, isOpen, isActive: () => isOpen() };
 }

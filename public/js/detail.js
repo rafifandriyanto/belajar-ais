@@ -1,13 +1,25 @@
-/** detail.js — Drawer kanan: particulars, voyage, aksi favorit/follow/riwayat/edit. */
-import { escapeHtml, fmtCoord, fmtNm } from './util.js';
+/** detail.js — Panel detail kapal: particulars, voyage, aksi favorit/follow/riwayat/edit. */
+import { escapeHtml, fmtClock, fmtCoord, fmtNm } from './util.js';
 
-export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, onEdit, onDelete, onFollow }) {
+export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, onEdit, onDelete, onFollow, onError, onClose }) {
   const el = document.createElement('aside');
   el.className = 'detail-drawer';
-  el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-label', 'Detail kapal');
+  el.id = 'detailDrawer';
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-labelledby', 'detailTitle');
   el.hidden = true;
+
+  // Scrim hanya tampil saat drawer menjadi bottom sheet (<1024px, via CSS).
+  const scrim = document.createElement('button');
+  scrim.type = 'button';
+  scrim.className = 'drawer-scrim';
+  scrim.tabIndex = -1;
+  scrim.setAttribute('aria-hidden', 'true');
+  scrim.addEventListener('click', close);
+
+  mainEl.appendChild(scrim);
   mainEl.appendChild(el);
+
   let current = null;
   let voyageAt = 0;
   let deleteArmed = false;
@@ -23,8 +35,8 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
     deleteArmed = false;
     el.innerHTML = `
       <div class="detail-head">
-        <span class="detail-title">${escapeHtml(s.name)}</span>
-        <button class="icon-btn" data-el="close" aria-label="Tutup detail">
+        <h2 class="detail-title" id="detailTitle" tabindex="-1">${escapeHtml(s.name)}</h2>
+        <button class="icon-btn" data-el="close" aria-label="Tutup detail kapal">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -39,7 +51,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
       <div class="detail-live" data-el="live"></div>
       <div class="popup-divider"></div>
       ${v ? row('Destination', escapeHtml(v.destination || '-')) : ''}
-      ${v ? row('ETA', `<span data-el="eta">${new Date(v.etaIso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>`) : ''}
+      ${v ? row('ETA WIB', `<span data-el="eta">${fmtClock(v.etaIso).slice(0, 5)}</span>`) : ''}
       ${v ? row('Sisa jarak', `<span data-el="nm">${fmtNm(v.remainingM)} nm</span>`) : ''}
       <div class="detail-actions">
         <button class="btn" data-el="fav" aria-pressed="${favorites.has(s.mmsi)}">${favorites.has(s.mmsi) ? '★ FAVORIT' : '☆ FAVORIT'}</button>
@@ -47,17 +59,24 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
         <button class="btn" data-el="hist">RIWAYAT</button>
         ${editable ? '<button class="btn" data-el="edit">EDIT</button>' : ''}
         ${editable ? '<button class="btn danger" data-el="del">HAPUS</button>' : ''}
-      </div>`;
+      </div>
+      <p class="detail-foot">Data simulasi — bukan feed AIS nyata.</p>`;
     el.querySelector('[data-el="close"]').addEventListener('click', close);
-    el.querySelector('[data-el="fav"]').addEventListener('click', () => { favorites.toggle(s.mmsi); render(); });
-    el.querySelector('[data-el="follow"]').addEventListener('click', () => { onFollow(s.mmsi); render(); });
+    el.querySelector('[data-el="fav"]').addEventListener('click', () => { favorites.toggle(s.mmsi); rerender('fav'); });
+    el.querySelector('[data-el="follow"]').addEventListener('click', () => { onFollow(s.mmsi); rerender('follow'); });
     el.querySelector('[data-el="hist"]').addEventListener('click', () => onHistory(s.mmsi));
     el.querySelector('[data-el="edit"]')?.addEventListener('click', () => onEdit(s));
     el.querySelector('[data-el="del"]')?.addEventListener('click', (e) => {
-      if (!deleteArmed) { deleteArmed = true; e.currentTarget.textContent = 'YAKIN? KLIK LAGI'; return; }
+      if (!deleteArmed) { deleteArmed = true; e.currentTarget.textContent = 'YAKIN HAPUS?'; return; }
       onDelete(s.mmsi);
     });
     paintLive();
+  }
+
+  /** Render ulang tanpa membuang fokus keyboard pada tombol yang baru diklik. */
+  function rerender(focusKey) {
+    render();
+    if (focusKey) el.querySelector(`[data-el="${focusKey}"]`)?.focus();
   }
 
   function paintLive(dyn) {
@@ -69,23 +88,38 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
   }
 
   async function open(mmsi) {
-    const r = await fetch(`/api/ships/${mmsi}`);
-    if (!r.ok) return false;
     invoker = document.activeElement;
+    let r = null;
+    try {
+      r = await fetch(`/api/ships/${mmsi}`);
+    } catch {
+      r = null;
+    }
+    if (!r || !r.ok) {
+      onError?.('Detail kapal tidak bisa dimuat. Periksa koneksi lalu klik kapal lagi.');
+      return false;
+    }
     current = (await r.json()).data;
     current.dyn = getDyn ? getDyn(mmsi) : null;
     voyageAt = Date.now();
     el.hidden = false;
+    scrim.classList.add('visible');
     render();
-    el.querySelector('[data-el="close"]').focus();
+    // Fokus ke judul: screen reader langsung mendengar kapal mana yang terbuka.
+    el.querySelector('#detailTitle')?.focus();
     return true;
   }
+
   function close() {
+    const wasOpen = !el.hidden;
     el.hidden = true;
+    scrim.classList.remove('visible');
     current = null;
     if (invoker && document.contains(invoker)) invoker.focus();
     invoker = null;
+    if (wasOpen) onClose?.();
   }
+
   function refresh(ships) {
     if (!current || el.hidden) return;
     const d = ships.find((x) => x.mmsi === current.mmsi);
@@ -99,7 +133,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
           current.voyage = j.data.voyage;
           const eta = el.querySelector('[data-el="eta"]');
           const nm = el.querySelector('[data-el="nm"]');
-          if (eta && current.voyage) eta.textContent = new Date(current.voyage.etaIso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          if (eta && current.voyage) eta.textContent = fmtClock(current.voyage.etaIso).slice(0, 5);
           if (nm && current.voyage) nm.textContent = `${fmtNm(current.voyage.remainingM)} nm`;
         }
       }).catch(() => {});
