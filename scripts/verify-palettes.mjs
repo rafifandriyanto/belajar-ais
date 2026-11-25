@@ -45,7 +45,11 @@ for (let i = 0; i < 4; i++) {
   }
   console.log(`  ink teks aman: ${tokens.inks.join(' ')}`);
   await shot(cdp, `docs/screenshots/v21-palette-${name}.png`);
-  await evaluate(cdp, `document.getElementById('paletteBtn').click()`);
+  await evaluate(cdp, `(() => {
+    const next = ${JSON.stringify(names)}[(${JSON.stringify(names)}.indexOf(document.documentElement.dataset.palette || 'sonar') + 1) % 4];
+    document.getElementById('displayBtn').click();
+    document.querySelector('[data-palette="' + next + '"]').click();
+  })()`);
   await sleep(1500);
 }
 await closeTab(tab.id);

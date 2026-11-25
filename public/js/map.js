@@ -17,6 +17,7 @@ export function initMap() {
   const tileOSM = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     maxZoom: 19,
+    className: 'tile-osm',
   }).addTo(map);
 
   const tileSat = L.tileLayer(

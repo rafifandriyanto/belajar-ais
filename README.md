@@ -1,142 +1,120 @@
 # AIS VTS Console
 
-![Dashboard AIS VTS Console palet sonar](docs/screenshots/v21-palette-sonar.png)
+![Tampilan utama AIS VTS Console](docs/screenshots/dashboard.png)
 
-Konsol monitoring pergerakan kapal **AIS (Automatic Identification System)** simulasi
-di perairan **Selat Madura & Pelabuhan Tanjung Perak, Surabaya**. Real-time via
-Socket.io, riwayat posisi di MongoDB, data statis armada di PostgreSQL, peta Leaflet.
-
-Dibangun sebagai proyek pembelajaran (PKL) Teknik Perkapalan: seluruh kapal adalah
-simulasi virtual, bukan feed AIS asli.
-
----
+Konsol ini memantau pergerakan kapal di Selat Madura dan Pelabuhan Tanjung Perak, Surabaya. Kapalnya simulasi, dibuat untuk PKL Teknik Perkapalan. Posisi live lewat Socket.io, riwayat posisi di MongoDB, data armada di PostgreSQL, dan peta memakai Leaflet.
 
 ## Fitur
 
-- **Live tracking**: 10 kapal virtual bergerak dengan fisika nyata (knot ke m/detik,
-  delta-time, koreksi bujur), rotasi marker mengikuti heading, jejak polyline per kapal.
-- **Search nama / MMSI**: kotak cari di sidebar dengan navigasi keyboard
-  (ArrowDown / ArrowUp memilih, Enter membuka detail, Esc mengosongkan).
-- **Drawer detail + voyage**: klik kapal (daftar atau marker) membuka panel kanan
-  berisi particulars (IMO, call sign, flag, dimensi), data live, dan voyage:
-  destination, ETA, serta sisa jarak dalam mil laut yang dihitung dari rute aktif.
-- **Favorites & follow**: bintang per kapal dan filter chip Favorit, tersimpan di
-  localStorage. FOLLOW membuat peta mengikuti kapal terpilih tiap tick.
-- **Riwayat + playback**: track riwayat dari MongoDB (default 6 jam terakhir; titik
-  anomali dibuang speed-gate, gap data tidak ditarik garis), slider waktu atau
-  play (1x / 4x / 16x) untuk memutar ulang.
-- **Deep link**: `?ship=<mmsi>` membuka detail + riwayat kapal langsung saat load;
-  opsional `from` / `to` (ISO 8601) untuk membatasi rentang waktu.
-- **Auth + CRUD kapal**: register / login dengan peran `admin` dan `operator`.
-  Admin mengelola seluruh armada; operator hanya kapal miliknya. Tambah / edit kapal
-  lewat form dengan editor rute klik-peta (klik peta menambah waypoint, undo / clear),
-  hapus dua langkah. Perubahan langsung live lewat Socket.io `fleet:update`,
-  tanpa restart server.
-- **Filter jenis kapal**: Ferry / Cargo / Tanker / Tug; marker, jejak, dan daftar ikut.
-- **Status sandar**: ferry & tug berhenti sebentar di terminal ujung rute (MOORED).
-- **Indikator koneksi**: badge LIVE berubah OFFLINE saat socket putus, toast saat reconnect.
-- **Palet warna**: switcher 4 palet flat (sonar teal default, phosphor green, amber,
-  chart terang) plus tema peta gelap / terang / satelit Esri. Pilihan tersimpan lokal.
-- **Responsif**: sidebar kanan di desktop, panel bawah di mobile; topbar icon-only
-  di layar sempit.
+- **Pergerakan kapal**: 10 kapal virtual berjalan menurut rute, kecepatan knot, dan waktu sandar. Marker berputar mengikuti heading; jejak tiap kapal digambar sebagai polyline.
+- **Pencarian**: kolom cari nama atau MMSI. ArrowDown/ArrowUp memilih hasil, Enter membuka kapal, Escape mengosongkan kolom.
+- **Detail kapal**: klik kapal di daftar atau peta. Panel berisi MMSI, IMO, call sign, bendera, ukuran, kecepatan, heading, posisi, destination, ETA, dan sisa jarak. Di desktop panel ini jadi kolom ketiga, di layar sempit jadi bottom sheet. Daftar kapal tetap terlihat di desktop.
+- **Riwayat dan playback**: riwayat diambil dari MongoDB, default enam jam terakhir. Titik dengan kecepatan tak wajar dibuang dan jeda data tidak disambung dengan garis lurus. Slider dipakai untuk memilih waktu; play berjalan di 1x, 4x, atau 16x. Saat riwayat aktif, marker live disembunyikan dan nilai live di panel detail dibekukan.
+- **Favorit dan follow**: bintang di tiap kapal, filter Favorit, dan tombol FOLLOW agar peta mengikuti kapal tertentu. Pilihan disimpan di localStorage.
+- **Filter dan navigasi**: filter Ferry, Cargo, Tanker, Tug, dan Favorit. Di layar ≤600px filter jadi satu tombol FILTER. Sidebar punya tab PETA, ARMADA, dan RIWAYAT.
+- **Akun dan CRUD kapal**: daftar dan masuk dengan peran admin atau operator. Admin mengelola semua kapal, operator hanya kapalnya sendiri. Form tambah/edit memakai klik peta untuk waypoint, dengan undo dan clear. Perubahan langsung muncul di semua client lewat `fleet:update`.
+- **Status koneksi**: badge awal `MENYAMBUNG`, lalu `LIVE` setelah frame pertama. Socket gagal atau data berhenti lebih dari 12 detik memunculkan umur data dan banner, disertai tombol COBA LAGI bila belum ada data sama sekali.
+- **Tampilan**: menu Tampilan berisi empat palet (sonar, phosphor, amber, chart) dan pilihan tema peta gelap atau terang. Pilihan disimpan lokal. Chip SIMULASI selalu terlihat di topbar.
+- **Deep link**: `?ship=<mmsi>` membuka detail dan riwayat kapal. Parameter `from` dan `to` ISO 8601 membatasi rentang waktu.
 
-![Drawer detail dan voyage](docs/screenshots/v21-detail.png)
+![Panel detail kapal](docs/screenshots/detail.png)
 
-Screenshot palet: [sonar](docs/screenshots/v21-palette-sonar.png) ·
-[phosphor](docs/screenshots/v21-palette-phosphor.png) ·
-[amber](docs/screenshots/v21-palette-amber.png) ·
-[chart](docs/screenshots/v21-palette-chart.png) ·
-[mobile 390px](docs/screenshots/v21-mobile.png)
+![Riwayat dan playback](docs/screenshots/history.png)
+
+## Tampilan
+
+| Desktop | Mobile |
+|---|---|
+| ![Dashboard desktop](docs/screenshots/dashboard.png) | ![Dashboard mobile](docs/screenshots/mobile.png) |
+
+Palet lain: [sonar](docs/screenshots/v21-palette-sonar.png), [phosphor](docs/screenshots/v21-palette-phosphor.png), [amber](docs/screenshots/v21-palette-amber.png), [chart](docs/screenshots/v21-palette-chart.png).
+
+## Perubahan terakhir
+
+- Panel detail tidak lagi menutup daftar kapal. Di desktop ia jadi kolom ketiga; di bawah 1024px jadi bottom sheet.
+- Panel riwayat berada di kolom peta sehingga tombolnya tidak tertutup panel detail.
+- Saat playback, hanya track dan playhead yang menonjol. Marker live, jejak, dan ring seleksi disembunyikan.
+- Topbar dikelompokkan dalam tiga bagian. Jam WIB dan UTC tetap keduanya. Tombol tema dan palet digabung menjadi menu Tampilan.
+- Sidebar mendapat navigasi PETA, ARMADA, dan RIWAYAT.
+- Font berganti ke Fira Sans untuk antarmuka dan Fira Code untuk angka. Teks fungsional minimal 12px.
+- Koneksi awal yang gagal tidak lagi menampilkan badge LIVE. Status `MENYAMBUNG`, `BELUM ADA DATA`, dan tombol COBA LAGI menggantikannya.
+- Target sentuh minimal 44px pada perangkat sentuh, input 16px agar tidak zoom saat fokus.
 
 ## Tech stack
 
 | Layer | Teknologi |
 |---|---|
 | Backend | Node.js, Express 4, Socket.io 4 |
-| Data statis | PostgreSQL (`pg`): tabel `ships`, `routes`, `ports`, `users`, `sessions` |
-| Riwayat posisi | MongoDB (Mongoose): compound index + TTL retensi |
-| Auth | `node:crypto` scrypt + session cookie HttpOnly (tanpa dependensi tambahan) |
+| Data statis | PostgreSQL (`pg`): `ships`, `routes`, `ports`, `users`, `sessions` |
+| Riwayat posisi | MongoDB (Mongoose), compound index, TTL retensi |
+| Auth | `node:crypto` scrypt dan cookie session HttpOnly |
 | Frontend | Vanilla JS (ES modules), Leaflet 1.9.4, CSS design tokens |
-| Tipografi | IBM Plex Sans + IBM Plex Mono |
-| Test | `node:test` (tanpa dependensi tambahan) |
+| Tipografi | Fira Sans dan Fira Code |
+| Test | `node:test` |
 
-Tanpa build step, tanpa framework frontend, tanpa API key peta.
+Tidak ada build step, framework frontend, atau API key peta.
 
 ## Arsitektur
 
 ```
-                 ┌────────────────────────────┐
-                 │  Browser (Leaflet + ES mod) │
-                 └───────┬────────────▲───────┘
-                    REST │            │ Socket.io "ships:update" (2s)
-                 ┌───────▼────────────┴───────┐
-                 │  Express + Socket.io server │
-                 │ routes/api · routes/auth    │
-                 │ services/fleet · voyage     │
-                 └──┬──────────┬───────────┬──┘
-        load start  │          │ insert 10s │ merge
-                 ┌──▼───┐  ┌───▼────┐  ┌───▼────────┐
-                 │ PG   │  │ Mongo  │  │ simulator  │
-                 │ships │  │positions│ │ (dinamika) │
-                 │routes│  │ +TTL   │  └───▲────────┘
-                 │users │  └────────┘      │ upsert/remove
-                 └──────┘            CRUD kapal (live)
+                  ┌────────────────────────────┐
+                  │  Browser (Leaflet + ES mod) │
+                  └───────┬────────────▲───────┘
+                     REST │            │ Socket.io "ships:update" (2s)
+                  ┌───────▼────────────┴───────┐
+                  │  Express + Socket.io server │
+                  │ routes/api · routes/auth    │
+                  │ services/fleet · voyage     │
+                  └──┬──────────┬───────────┬──┘
+         load start  │          │ insert 10s │ merge
+                  ┌──▼───┐  ┌───▼────┐  ┌───▼────────┐
+                  │ PG   │  │ Mongo  │  │ simulator  │
+                  │ships │  │positions│ │ (dinamika) │
+                  │routes│  │ +TTL   │  └───▲────────┘
+                  │users │  └────────┘      │ upsert/remove
+                  └──────┘            CRUD kapal (live)
 ```
 
-`data/fleet.js` adalah sumber data statis awal (dipakai seeder dan fallback simulator).
-Saat server start, armada di-load dari PostgreSQL (ships + routes); payload REST dan
-Socket.io di-merge oleh fungsi yang sama sehingga selalu konsisten. CRUD kapal
-meng-update tabel PG, cache statis, dan simulator sekaligus, lalu memancarkan
-`fleet:update` ke semua client. Bila database mati, server tetap berjalan dengan
-data lokal (riwayat dan auth nonaktif, pesan error yang jelas di UI).
+`data/fleet.js` dipakai seeder dan sebagai fallback bila database tidak tersedia. Saat server start, armada diambil dari PostgreSQL. Payload REST dan Socket.io lewat fungsi merge yang sama. CRUD kapal mengubah tabel PostgreSQL, cache statis, dan simulator, lalu memancarkan `fleet:update`.
 
 ## Menjalankan
 
-Prasyarat: Node.js 18+, PostgreSQL, MongoDB (lokal via FlyEnv/Laragon, atau Atlas).
+Prasyarat: Node.js 18+, PostgreSQL, dan MongoDB.
 
 ```bash
 git clone https://github.com/rafifandriyanto/belajar-ais.git
 cd belajar-ais
 npm install
-cp .env.example .env        # isi MONGODB_URI & DATABASE_URL
-npm run seed                # tabel + 10 kapal + rute + particulars + 3 pelabuhan
-npm run dev                 # auto-reload, atau: npm start
+cp .env.example .env
+npm run seed
+npm run dev
 ```
 
-Buka **http://localhost:3000**.
+Buka http://localhost:3000.
 
-`npm run seed` idempotent: selain kapal dan pelabuhan, ia mengisi tabel `routes`
-(waypoints, speed, dwell) dan particulars (IMO, call sign, flag, dimensi, destination)
-yang dipakai drawer detail dan perhitungan voyage. Bila `ADMIN_USERNAME` /
-`ADMIN_PASSWORD` disetel di `.env`, seed membuat akun admin tersebut; bila tidak,
-pendaftar pertama di web menjadi admin.
+`npm run seed` bisa dijalankan berulang. Seed mengisi kapal, rute, pelabuhan, particulars, dan akun admin bila `ADMIN_USERNAME`/`ADMIN_PASSWORD` disetel. Bila tidak ada, pendaftar pertama menjadi admin.
 
-> Tanpa MongoDB/PostgreSQL pun app tetap jalan: data statis fallback ke
-> `data/fleet.js`, panel riwayat dan form auth menampilkan pesan bahwa database
-> belum tersedia.
+Tanpa PostgreSQL atau MongoDB, server tetap jalan dengan data dari `data/fleet.js`. Riwayat dan auth tidak aktif, dan UI menampilkan alasannya.
 
-Variabel `.env` opsional: `POSITION_TTL_DAYS` (retensi riwayat, default 30 hari,
-`0` = selamanya), `USE_PUBLIC_DNS` (bila SRV Atlas gagal resolve),
-`ADMIN_USERNAME` / `ADMIN_PASSWORD` (akun admin awal saat seed).
+Variabel `.env` opsional: `POSITION_TTL_DAYS` (default 30 hari, `0` berarti selamanya), `USE_PUBLIC_DNS`, `ADMIN_USERNAME`, dan `ADMIN_PASSWORD`.
 
 ## API
 
 | Method | Endpoint | Deskripsi |
 |---|---|---|
-| GET | `/api/ships` | Posisi live + nama/tipe gabungan (PG + simulator) |
-| GET | `/api/ships/:mmsi` | Particulars + voyage (sisa jarak, ETA) dari rute aktif |
-| POST | `/api/ships` | Tambah kapal + rute (auth). Validasi MMSI 9 digit, bbox Selat Madura |
-| PUT | `/api/ships/:mmsi` | Edit kapal / rute (auth; admin semua, operator miliknya) |
-| DELETE | `/api/ships/:mmsi` | Hapus kapal (auth; rute cascade, riwayat ikut TTL) |
-| GET | `/api/ships/:mmsi/history` | Riwayat posisi ascending. Param: `limit` (1-1000, default 100), `from`, `to` (ISO). MMSI wajib 9 digit |
-| GET | `/api/ports` | Daftar pelabuhan (PG, fallback lokal) |
-| POST | `/api/auth/register` | Daftar (username 3-24 karakter, password min 8). Pendaftar pertama = admin |
-| POST | `/api/auth/login` | Masuk, set cookie session HttpOnly |
-| POST | `/api/auth/logout` | Keluar, hapus session |
-| GET | `/api/auth/me` | User aktif ({id, username, role}) atau null |
+| GET | `/api/ships` | Posisi live dan data kapal gabungan |
+| GET | `/api/ships/:mmsi` | Particulars dan voyage dari rute aktif |
+| POST | `/api/ships` | Tambah kapal dan rute, butuh auth |
+| PUT | `/api/ships/:mmsi` | Edit kapal dan rute, butuh auth |
+| DELETE | `/api/ships/:mmsi` | Hapus kapal, butuh auth |
+| GET | `/api/ships/:mmsi/history` | Riwayat posisi; `limit` 1-1000, `from`, `to` ISO |
+| GET | `/api/ports` | Daftar pelabuhan |
+| POST | `/api/auth/register` | Daftar akun |
+| POST | `/api/auth/login` | Masuk dan set cookie session |
+| POST | `/api/auth/logout` | Keluar |
+| GET | `/api/auth/me` | User aktif, atau `data: null` bila belum masuk |
 
-Socket.io: `ships:update` (array kapal merged) tiap 2 detik hanya bila ada client;
-`fleet:update` dipancarkan setiap CRUD kapal berhasil.
+Socket.io memancarkan `ships:update` tiap dua detik hanya bila ada client, dan `fleet:update` setelah CRUD kapal.
 
 ## Test
 
@@ -144,32 +122,31 @@ Socket.io: `ships:update` (array kapal merged) tiap 2 detik hanya bila ada clien
 npm test
 ```
 
-Unit test `node:test`: bearing/haversine/destination-point, step fisika per detik,
-sandar & balik arah di ujung rute, merge data statis+dinamis, validasi MMSI,
-perhitungan voyage (sisa jarak + ETA), validasi payload kapal, CRUD simulator
-(upsert/reset rute/remove), dan pencarian nama/MMSI.
+Test mencakup bearing dan haversine, fisika per detik, sandar dan balik arah, merge data, validasi MMSI dan payload, voyage, CRUD simulator, pencarian, dan endpoint `/api/auth/me`.
+
+Script verifikasi visual butuh Chrome headless dengan CDP di port 9222 dan server di port 3000:
+
+```bash
+node scripts/verify-topbar.mjs 390
+node scripts/verify-palettes.mjs
+```
 
 ## Struktur
 
 ```
-├── data/fleet.js          # sumber data statis awal kapal & pelabuhan
-├── simulator.js           # dinamika: fisika knot, delta-time, dwell, upsert/remove
-├── services/fleet.js      # load statis dari PG + merge payload
-├── services/voyage.js     # sisa jarak + ETA dari rute aktif
-├── services/ship-validate.js # validasi payload kapal (MMSI, bbox, tipe, speed)
-├── routes/api.js          # REST: ships, CRUD, history, ports
-├── routes/auth.js         # register/login/logout/me, session scrypt, rate limit
-├── db/postgres.js         # pool PG
-├── db/seed.js             # seed idempotent: ships, routes, ports, admin opsional
-├── models/Position.js     # Mongoose: compound index + TTL
-├── server.js              # bootstrap, socket, interval, graceful shutdown
+├── data/fleet.js
+├── simulator.js
+├── services/
+├── routes/
+├── db/
+├── models/Position.js
+├── server.js
 ├── public/
 │   ├── index.html
-│   ├── css/console.css    # design tokens "VTS Console" + 4 palet
-│   └── js/                # main, map, fleet, history, socket, util,
-│                          # favorites, detail, auth, editor
-├── scripts/               # helper CDP + verifikasi visual (tanpa dependensi)
-├── test/                  # node:test
+│   ├── css/console.css
+│   └── js/
+├── scripts/
+├── test/
 └── docs/screenshots/
 ```
 

@@ -145,14 +145,16 @@ router.post('/logout', sameOrigin, async (req, res) => {
   res.json({ status: 'success' });
 });
 
-router.get('/me', async (req, res) => {
+async function me(req, res) {
   try {
-    const u = await sessionUser(req);
-    if (!u) return res.status(401).json({ status: 'error', message: 'Belum masuk' });
-    res.json({ status: 'success', data: u });
+    // Tanpa sesi adalah keadaan normal, bukan error. Mengembalikan 401 membuat
+    // browser mencatat console error setiap kali halaman dimuat.
+    res.json({ status: 'success', data: await sessionUser(req) });
   } catch {
     pgDown(res);
   }
-});
+}
 
-module.exports = { router, requireAuth, sameOrigin, sessionUser };
+router.get('/me', me);
+
+module.exports = { router, requireAuth, sameOrigin, sessionUser, me };

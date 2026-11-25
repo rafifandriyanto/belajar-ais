@@ -4,7 +4,7 @@
  * event klik pakai delegation; trail pakai satu polyline per kapal.
  */
 
-import { escapeHtml, fmtCoord, TYPE_COLORS, matchShip } from './util.js';
+import { escapeHtml, TYPE_COLORS, matchShip } from './util.js';
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
@@ -51,19 +51,6 @@ function buildShipSVG(type, heading, mmsi) {
 </svg>`;
 }
 
-function popupHtml(ship) {
-  const moored = ship.status === 'moored';
-  return `
-<div class="popup-title">${escapeHtml(ship.name)}</div>
-<span class="popup-type ${escapeHtml(ship.type)}">${escapeHtml(ship.type)}${moored ? ' · MOORED' : ''}</span>
-<div class="popup-divider"></div>
-<div class="popup-row"><span class="popup-row-label">MMSI</span><span class="popup-row-value">${escapeHtml(ship.mmsi)}</span></div>
-<div class="popup-row"><span class="popup-row-label">Status</span><span class="popup-row-value ${moored ? 'moored' : 'ok'}">${moored ? 'MOORED' : 'UNDERWAY'}</span></div>
-<div class="popup-row"><span class="popup-row-label">Kecepatan</span><span class="popup-row-value">${Number(ship.speed).toFixed(1)} kn</span></div>
-<div class="popup-row"><span class="popup-row-label">Heading</span><span class="popup-row-value">${ship.heading}°</span></div>
-<div class="popup-row"><span class="popup-row-label">Lat / Lon</span><span class="popup-row-value">${fmtCoord(ship.lat)}, ${fmtCoord(ship.lon)}</span></div>`;
-}
-
 export function createFleet(map, { onSelect, favorites, onToggleFav }) {
   const markers = new Map(); // mmsi → {marker, trail, history, data, row, els}
   const activeFilters = new Set(ALL_TYPES);
@@ -81,55 +68,48 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
   emptyEl.innerHTML = '<span>Tidak ada kapal yang sesuai filter</span>';
   listEl.appendChild(emptyEl);
 
-  // Event delegation: satu listener untuk seluruh daftar (klik + keyboard)
+  // Event delegation: satu listener untuk seluruh daftar.
+  // Baris memakai <button> asli, jadi Enter/Space ditangani browser.
   listEl.addEventListener('click', (e) => {
-    const row = e.target.closest('.ship-row');
-    if (!row) return;
     const star = e.target.closest('.fav-star');
     if (star) {
-      e.stopPropagation();
-      onToggleFav(row.dataset.mmsi);
+      const row = star.closest('.ship-row');
+      if (row) onToggleFav(row.dataset.mmsi);
       return;
     }
-    onSelect(row.dataset.mmsi);
-  });
-  listEl.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    const row = e.target.closest('.ship-row');
-    if (row) {
-      e.preventDefault();
-      onSelect(row.dataset.mmsi);
-    }
+    const open = e.target.closest('.ship-open');
+    if (open) onSelect(open.closest('.ship-row').dataset.mmsi);
   });
 
   function makeRow(ship) {
     const row = document.createElement('div');
     row.className = 'ship-row';
     row.dataset.mmsi = ship.mmsi;
-    row.setAttribute('role', 'button');
-    row.setAttribute('tabindex', '0');
-    row.setAttribute('aria-label', `${ship.name}, ${ship.type}, MMSI ${ship.mmsi}`);
     // Entrance stagger hanya saat baris pertama kali dibuat
     row.style.animationDelay = `${Math.min(markers.size * 35, 315)}ms`;
     row.innerHTML = `
-      <div class="ship-row-top">
-        <span class="ship-name" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
-        <span class="type-tag ${escapeHtml(ship.type)}">${escapeHtml(ship.type)}</span>
-        <button class="fav-star" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>
-        </button>
-      </div>
-      <div class="ship-row-meta">
-        <span class="status-dot" data-el="dot"></span>
-        <span data-el="speed"></span>
-        <span data-el="heading"></span>
-        <span data-el="status"></span>
-        <span class="mmsi">…${escapeHtml(ship.mmsi.slice(-4))}</span>
-      </div>`;
+      <button class="ship-open" type="button" aria-expanded="false" aria-controls="detailDrawer"
+              aria-label="${escapeHtml(ship.name)}, ${escapeHtml(ship.type)}, MMSI ${escapeHtml(ship.mmsi)}">
+        <span class="ship-row-top">
+          <span class="ship-name" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
+          <span class="type-tag ${escapeHtml(ship.type)}">${escapeHtml(ship.type)}</span>
+        </span>
+        <span class="ship-row-meta">
+          <span class="status-dot" data-el="dot"></span>
+          <span data-el="speed"></span>
+          <span data-el="heading"></span>
+          <span data-el="status"></span>
+          <span class="mmsi">…${escapeHtml(ship.mmsi.slice(-4))}</span>
+        </span>
+      </button>
+      <button class="fav-star" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>
+      </button>`;
     listEl.appendChild(row);
     return {
       row,
       els: {
+        open: row.querySelector('.ship-open'),
         dot: row.querySelector('[data-el="dot"]'),
         speed: row.querySelector('[data-el="speed"]'),
         heading: row.querySelector('[data-el="heading"]'),
@@ -149,8 +129,11 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
       popupAnchor: [0, -(h / 2 + 6)],
     });
     const marker = L.marker([ship.lat, ship.lon], { icon });
-    marker.bindPopup(popupHtml(ship));
     marker.on('click', () => onSelect(ship.mmsi));
+    marker.on('add', () => {
+      const el = marker.getElement();
+      if (el) el.setAttribute('aria-label', `${ship.name}, ${ship.type}, MMSI ${ship.mmsi}`);
+    });
 
     const trail = L.polyline([], {
       color: TYPE_COLORS[ship.type] || TYPE_COLORS.ferry,
@@ -213,7 +196,7 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
           svg.style.transform = `rotate(${ship.heading}deg)`;
           svg.classList.toggle('moored', ship.status === 'moored');
         }
-        if (obj.marker.isPopupOpen()) obj.marker.setPopupContent(popupHtml(ship));
+        if (obj.marker.isPopupOpen()) obj.marker.closePopup();
 
         obj.history.push([ship.lat, ship.lon]);
         if (obj.history.length > TRAIL_MAX) obj.history.shift();
@@ -274,7 +257,9 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
   function setSelected(mmsi) {
     selected = mmsi;
     for (const [key, obj] of markers) {
-      obj.row.classList.toggle('selected', key === mmsi);
+      const isSelected = key === mmsi;
+      obj.row.classList.toggle('selected', isSelected);
+      obj.els.open.setAttribute('aria-expanded', String(isSelected));
     }
     if (selRing) { map.removeLayer(selRing); selRing = null; }
     const obj = markers.get(mmsi);
@@ -284,13 +269,9 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
         color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3fd8c7',
         weight: 1.5, opacity: 0.9,
         fill: false, dashArray: '3 3', interactive: false,
+        className: 'sel-ring',
       }).addTo(map);
       map.panTo(obj.marker.getLatLng(), { animate: true, duration: 0.6 });
-      // Popup dibuka setelah peta selesai bergerak (pan / fitBounds riwayat),
-      // supaya autoPan Leaflet tidak terpotong topbar atau panel.
-      setTimeout(() => {
-        if (selected === mmsi && map.hasLayer(obj.marker)) obj.marker.openPopup();
-      }, 700);
       obj.row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
@@ -313,7 +294,13 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
     rows[kbdIndex].classList.add('kbd-active');
     rows[kbdIndex].scrollIntoView({ block: 'nearest' });
   }
-  function selectKbd() { const rows = visibleRows(); if (rows[kbdIndex]) onSelect(rows[kbdIndex].dataset.mmsi); }
+  function selectKbd() {
+    const rows = visibleRows();
+    if (!rows.length) return;
+    if (kbdIndex < 0) kbdIndex = 0;
+    const row = rows[Math.min(kbdIndex, rows.length - 1)];
+    if (row) onSelect(row.dataset.mmsi);
+  }
 
   return { update, toggleFilter, setSelected, getName, getSelected, getShip, setSearch, setFavFilter, moveKbd, selectKbd, clearKbd };
 }

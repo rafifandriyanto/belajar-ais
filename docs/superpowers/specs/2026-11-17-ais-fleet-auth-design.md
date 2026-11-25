@@ -59,7 +59,7 @@ aria-label/title) agar topbar tetap muat 390px.
 | 1 | Purple-to-blue gradient | tidak ada; palet baru bebas ungu; filter peta gelap dicek tidak cast ungu |
 | 2 | Gradient hero text | tidak ada teks gradient |
 | 3 | Emojis di headings | tidak ada |
-| 4 | Inter font everywhere | IBM Plex, bukan Inter |
+| 4 | Inter font everywhere | IBM Plex, bukan Inter. Catatan 2026-11-25: `2026-11-25-font-typography-design.md` mengoverride families jadi Fira Sans + Fira Code; Inter tetap dilarang |
 | 5 | Colored border cards | border netral `--border`; warna hanya pada dot/tag teks, bukan border kartu |
 | 6 | Glassmorphism cards | panel opaque, tanpa blur/transparansi kartu |
 | 7 | Low-contrast dark mode | kontras ≥ 4.5:1 diverifikasi per palet |
