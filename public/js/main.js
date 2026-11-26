@@ -148,7 +148,7 @@ function paintStaleness() {
   const stale = booting ? false : bootFail || !online || (!!lastDataAt && age > 12000);
   document.body.classList.toggle('is-stale', stale);
   staleBanner.hidden = !stale;
-  retryBtn.hidden = isOnline || booting;
+  retryBtn.hidden = online || booting;
   dataAgeEl.textContent = lastDataAt && age >= 2000 ? ageText(age) : '';
   if (!stale) return;
   staleText.textContent = bootFail
