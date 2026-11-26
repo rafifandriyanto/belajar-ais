@@ -25,13 +25,12 @@ export function createAuth({ onChange }) {
   document.getElementById('tabRegister').addEventListener('click', () => setTab('register'));
   document.getElementById('authClose').addEventListener('click', () => dlg.close());
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  async function doLogin(username, password) {
     err.hidden = true;
-    const r = await fetch(`/api/auth/${tab}`, {
+    const r = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: uEl.value, password: pEl.value }),
+      body: JSON.stringify({ username, password }),
     });
     const j = await r.json().catch(() => null);
     if (!r.ok) { err.textContent = j?.message || 'Gagal menghubungi server'; err.hidden = false; return; }
@@ -39,7 +38,17 @@ export function createAuth({ onChange }) {
     pEl.value = '';
     dlg.close();
     onChange(user);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await doLogin(uEl.value, pEl.value);
   });
+
+  const demoCreds = { demoAdmin: ['demo_admin', 'DemoPass123!'], demoOperator: ['demo_operator', 'DemoPass123!'] };
+  for (const [id, [u, p]] of Object.entries(demoCreds)) {
+    document.getElementById(id)?.addEventListener('click', () => doLogin(u, p));
+  }
 
   async function refresh() {
     const r = await fetch('/api/auth/me');
