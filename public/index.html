@@ -21,7 +21,7 @@
 <body>
 
   <!-- ═══ TOPBAR ═══ -->
-  <header class="flex flex-wrap items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2">
+  <header class="flex items-center gap-2 overflow-x-auto border-b border-slate-800 bg-slate-950 px-4 py-2">
     <div class="brand flex items-center gap-2">
       <div class="brand-mark">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <div class="topbar-right flex flex-1 flex-wrap items-center justify-end gap-2">
+    <div class="topbar-right flex flex-1 items-center justify-end gap-2 overflow-hidden">
       <div id="fleetStat" class="stat fleet-stat" title="Jumlah kapal yang lolos filter dan umur frame terakhir">
         <span class="stat-label">Armada</span>
         <span class="stat-value"><span id="totalShips" class="accent">--</span><span id="dataAge" class="stat-age"></span></span>
@@ -157,7 +157,7 @@
       </section>
     </div>
 
-    <aside id="sidebar" class="sidebar flex w-80 shrink-0 flex-col border-l border-slate-800 bg-slate-950">
+    <aside id="sidebar" class="sidebar flex w-72 shrink-0 flex-col border-l border-slate-800 bg-slate-950">
       <div class="sidebar-head">
         <span class="sidebar-title">ARMADA AKTIF<b id="sidebarCount">0</b></span>
         <button id="addShipBtn" class="icon-btn" hidden title="Tambah kapal" aria-label="Tambah kapal">
