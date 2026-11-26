@@ -21,8 +21,8 @@
 <body>
 
   <!-- ═══ TOPBAR ═══ -->
-  <header class="topbar">
-    <div class="brand">
+  <header class="flex flex-wrap items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2">
+    <div class="brand flex items-center gap-2">
       <div class="brand-mark">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <circle cx="12" cy="12" r="9"/>
@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <div class="topbar-right">
+    <div class="topbar-right flex flex-1 flex-wrap items-center justify-end gap-2">
       <div id="fleetStat" class="stat fleet-stat" title="Jumlah kapal yang lolos filter dan umur frame terakhir">
         <span class="stat-label">Armada</span>
         <span class="stat-value"><span id="totalShips" class="accent">--</span><span id="dataAge" class="stat-age"></span></span>
@@ -102,9 +102,9 @@
   </header>
 
   <!-- ═══ MAIN: PETA + SIDEBAR + DRAWER ═══ -->
-  <main class="main">
-    <div class="chart">
-      <div id="map" class="map-dark"></div>
+  <main class="main flex h-[calc(100vh-56px)] overflow-hidden">
+    <div class="chart relative flex-1">
+      <div id="map" class="map-dark h-full w-full"></div>
 
       <div id="staleBanner" class="stale-banner" role="status" aria-live="polite" hidden>
         <span id="staleText"></span>
@@ -156,7 +156,7 @@
       </section>
     </div>
 
-    <aside id="sidebar" class="sidebar">
+    <aside id="sidebar" class="sidebar flex w-80 shrink-0 flex-col border-l border-slate-800 bg-slate-950">
       <div class="sidebar-head">
         <span class="sidebar-title">ARMADA AKTIF<b id="sidebarCount">0</b></span>
         <button id="addShipBtn" class="icon-btn" hidden title="Tambah kapal" aria-label="Tambah kapal">
