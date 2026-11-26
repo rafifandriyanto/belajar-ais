@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+[hidden] { display: none !important; }
+
 @layer components {
   .btn { @apply inline-flex items-center gap-1.5 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-700; }
   .btn.primary { @apply border-sky-600 bg-sky-600 text-white hover:bg-sky-500; }
