@@ -21,7 +21,11 @@ loadPorts();
 requestAnimationFrame(() => map.invalidateSize());
 window.addEventListener('resize', () => map.invalidateSize());
 if (typeof ResizeObserver === 'function') {
-  new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById('map'));
+  let roTimer = null;
+  new ResizeObserver(() => {
+    clearTimeout(roTimer);
+    roTimer = setTimeout(() => map.invalidateSize(), 120);
+  }).observe(document.getElementById('map'));
 }
 
 // ─── Nav konsol: satu sumber keadaan untuk tab ──────────────────────────────
