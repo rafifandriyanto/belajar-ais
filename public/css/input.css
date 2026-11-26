@@ -33,7 +33,8 @@
   .display-menu { @apply absolute right-0 top-full z-20 mt-1 w-48 rounded border border-slate-700 bg-slate-900 p-2 shadow-lg; }
   .display-menu-title { @apply block px-2 py-1 text-[10px] uppercase text-slate-500; }
   .display-menu-sep { @apply my-1 block h-px bg-slate-700; }
-  .display-long, .display-short { @apply hidden sm:inline; }
+  .display-long { @apply hidden sm:inline; }
+  .display-short { @apply inline sm:hidden; }
   .auth-user { @apply text-sm text-slate-300; }
   .sim-badge { @apply rounded border border-amber-700 bg-amber-900/40 px-2 py-0.5 text-[10px] font-bold text-amber-300; }
   .mode-badge { @apply rounded border border-sky-700 bg-sky-900/40 px-2 py-0.5 text-[10px] font-bold text-sky-300; }
