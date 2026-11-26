@@ -17,6 +17,7 @@
 
   <link rel="stylesheet" href="css/tailwind.css">
   <link rel="stylesheet" href="css/console.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
@@ -171,9 +172,9 @@
       </div>
 
       <nav class="view-nav flex gap-2 rounded bg-slate-900 p-2" aria-label="Navigasi konsol">
-        <button type="button" class="view-tab active flex items-center gap-1.5" data-view="peta" aria-current="page">🗺️ PETA</button>
-        <button type="button" class="view-tab flex items-center gap-1.5" data-view="armada">🚢 ARMADA</button>
-        <button type="button" class="view-tab flex items-center gap-1.5" data-view="riwayat">📜 RIWAYAT</button>
+        <button type="button" class="view-tab active flex items-center gap-1.5" data-view="peta" aria-current="page"><i class="bi bi-map"></i> PETA</button>
+        <button type="button" class="view-tab flex items-center gap-1.5" data-view="armada"><i class="bi bi-ship"></i> ARMADA</button>
+        <button type="button" class="view-tab flex items-center gap-1.5" data-view="riwayat"><i class="bi bi-clock-history"></i> RIWAYAT</button>
       </nav>
 
       <div class="search-row px-2 py-2">
@@ -185,10 +186,10 @@
       </button>
 
       <div class="filter-grid flex flex-wrap gap-2" id="filterGrid">
-        <button data-filter="ferry" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true">⛴ Ferry</button>
-        <button data-filter="cargo" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true">🚢 Cargo</button>
-        <button data-filter="tanker" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true">🛢️ Tanker</button>
-        <button data-filter="tug" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true">🛥️ Tug</button>
+        <button data-filter="ferry" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-water"></i> Ferry</button>
+        <button data-filter="cargo" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-box-seam"></i> Cargo</button>
+        <button data-filter="tanker" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-droplet"></i> Tanker</button>
+        <button data-filter="tug" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-truck"></i> Tug</button>
         <button id="favFilter" class="filter-btn fav-chip rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="false"><span class="dot inline-block h-2 w-2 rounded-full bg-amber-300"></span>Favorit</button>
       </div>
 

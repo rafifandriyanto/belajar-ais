@@ -6,7 +6,7 @@
 
 import { escapeHtml, TYPE_COLORS, matchShip } from './util.js';
 const typeColor = (t) => ({ ferry:'bg-sky-500/20 text-sky-300', cargo:'bg-amber-500/20 text-amber-300', tanker:'bg-rose-500/20 text-rose-300', tug:'bg-emerald-500/20 text-emerald-300' }[t] || 'bg-slate-500/20 text-slate-300');
-const typeIcon = (t) => ({ ferry:'⛴', cargo:'🚢', tanker:'🛢️', tug:'🛥️' }[t] || '');
+const typeIcon = (t) => ({ ferry:'<i class="bi bi-water"></i>', cargo:'<i class="bi bi-box-seam"></i>', tanker:'<i class="bi bi-droplet"></i>', tug:'<i class="bi bi-truck"></i>' }[t] || '');
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
