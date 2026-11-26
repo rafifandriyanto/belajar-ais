@@ -90,6 +90,14 @@ router.post('/register', sameOrigin, async (req, res) => {
   if (!/^[a-z0-9._-]{3,24}$/.test(username)) return bad(res, 'username: 3-24 karakter a-z 0-9 . _ -');
   if (password.length < 8) return bad(res, 'password: minimal 8 karakter');
   try {
+    // Registrasi hanya terbuka saat belum ada user (bootstrap admin) atau oleh admin.
+    const cnt = await pool.query('SELECT count(*)::int AS n FROM users');
+    if (cnt.rows[0].n > 0) {
+      const u = await sessionUser(req);
+      if (!u || u.role !== 'admin') {
+        return res.status(403).json({ status: 'error', message: 'Hanya admin yang boleh mendaftarkan user baru' });
+      }
+    }
     // Transaksi + advisory lock: cek duplikat atomik terhadap register bersamaan.
     const client = await pool.connect();
     try {
