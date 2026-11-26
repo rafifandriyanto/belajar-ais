@@ -6,6 +6,7 @@
 
 import { escapeHtml, TYPE_COLORS, matchShip } from './util.js';
 const typeColor = (t) => ({ ferry:'bg-sky-500/20 text-sky-300', cargo:'bg-amber-500/20 text-amber-300', tanker:'bg-rose-500/20 text-rose-300', tug:'bg-emerald-500/20 text-emerald-300' }[t] || 'bg-slate-500/20 text-slate-300');
+const typeIcon = (t) => ({ ferry:'⛴', cargo:'🚢', tanker:'🛢️', tug:'🛥️' }[t] || '🚢');
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
@@ -93,7 +94,7 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
               aria-label="${escapeHtml(ship.name)}, ${escapeHtml(ship.type)}, MMSI ${escapeHtml(ship.mmsi)}">
         <span class="flex min-w-0 items-center justify-between gap-2">
           <span class="truncate font-medium" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
-          <span class="shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold uppercase ${typeColor(ship.type)}">${escapeHtml(ship.type)}</span>
+          <span class="shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold uppercase ${typeColor(ship.type)}">${typeIcon(ship.type)} ${escapeHtml(ship.type)}</span>
         </span>
         <span class="flex items-center gap-2 text-xs text-slate-400">
           <span class="status-dot" data-el="dot"></span>
