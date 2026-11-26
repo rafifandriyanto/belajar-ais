@@ -90,8 +90,7 @@ router.post('/register', sameOrigin, async (req, res) => {
   if (!/^[a-z0-9._-]{3,24}$/.test(username)) return bad(res, 'username: 3-24 karakter a-z 0-9 . _ -');
   if (password.length < 8) return bad(res, 'password: minimal 8 karakter');
   try {
-    // Transaksi + advisory lock: cek duplikat dan penentuan admin pertama
-    // atomik terhadap register bersamaan.
+    // Transaksi + advisory lock: cek duplikat atomik terhadap register bersamaan.
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
@@ -101,8 +100,10 @@ router.post('/register', sameOrigin, async (req, res) => {
         await client.query('ROLLBACK');
         return res.status(409).json({ status: 'error', message: 'Username sudah dipakai' });
       }
-      const count = await client.query('SELECT count(*)::int AS n FROM users');
-      const role = count.rows[0].n === 0 ? 'admin' : 'operator';
+      // Admin hanya jika username cocok dengan ADMIN_USERNAME di .env.
+      // Tidak ada lagi "pendaftar pertama otomatis admin".
+      const adminUser = String(process.env.ADMIN_USERNAME || '').trim().toLowerCase();
+      const role = adminUser && username === adminUser ? 'admin' : 'operator';
       const ins = await client.query(
         'INSERT INTO users (username, password_hash, role) VALUES ($1,$2,$3) RETURNING id, username, role',
         [username, A.hashPassword(password), role],
