@@ -77,6 +77,15 @@ Tidak ada build step, framework frontend, atau API key peta.
 
 `data/fleet.js` dipakai seeder dan sebagai fallback bila database tidak tersedia. Saat server start, armada diambil dari PostgreSQL. Payload REST dan Socket.io lewat fungsi merge yang sama. CRUD kapal mengubah tabel PostgreSQL, cache statis, dan simulator, lalu memancarkan `fleet:update`.
 
+## Catatan Arsitektur Database
+
+Proyek ini memakai **dua database** karena pola akses dan kebutuhan konsistensi yang berbeda:
+
+- **PostgreSQL (data master)** — menyimpan kapal, rute, pelabuhan, user, dan sesi. Data ini bersifat relasional (foreign key, constraint CHECK, transaksi ACID) dan butuh konsistensi tinggi: CRUD kapal memakai `BEGIN`/`COMMIT`/`ROLLBACK` agar tidak ada "kapal hantu" di cache. Konsistensi > skala tulis.
+- **MongoDB (riwayat posisi / time-series)** — menyimpan deret waktu posisi kapal (10 kapal × 1 insert/10 detik ≈ 86.400 dokumen/hari). Schema fleksibel, insertMany throughput tinggi, dan TTL index (`expireAfterSeconds`) membersihkan data lama otomatis. Skala tulis > konsistensi lintas-DB.
+
+**Trade-off yang diambil:** tidak ada transaksi lintas database. Jika Mongo gagal, riwayat hilang tapi armada tetap berfungsi (acceptable untuk demo, riwayat bukan data kritis). Kompleksitas operasional naik (dua koneksi, dua failure mode), tapi dijustifikasi oleh pola akses yang berbeda. Untuk skala besar, pertimbangkan TimescaleDB atau satu DB time-series.
+
 ## Menjalankan
 
 Prasyarat: Node.js 18+, PostgreSQL, dan MongoDB.
