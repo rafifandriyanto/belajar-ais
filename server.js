@@ -105,8 +105,8 @@ async function shutdown(signal) {
     await new Promise((resolve) => server.close(resolve));
     await pool.end();
     await mongoose.disconnect();
-  } catch {
-    // abaikan error saat penutupan
+  } catch (err) {
+    console.error('Gagal menutup server dengan bersih:', err.message);
   }
   process.exit(0);
 }
