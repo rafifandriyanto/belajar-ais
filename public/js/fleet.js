@@ -5,6 +5,7 @@
  */
 
 import { escapeHtml, TYPE_COLORS, matchShip } from './util.js';
+const typeColor = (t) => ({ ferry:'bg-sky-500/20 text-sky-300', cargo:'bg-amber-500/20 text-amber-300', tanker:'bg-rose-500/20 text-rose-300', tug:'bg-emerald-500/20 text-emerald-300' }[t] || 'bg-slate-500/20 text-slate-300');
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
@@ -88,21 +89,21 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
     // Entrance stagger hanya saat baris pertama kali dibuat
     row.style.animationDelay = `${Math.min(markers.size * 35, 315)}ms`;
     row.innerHTML = `
-      <button class="ship-open" type="button" aria-expanded="false" aria-controls="detailDrawer"
+      <button class="ship-open flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-slate-800" type="button" aria-expanded="false" aria-controls="detailDrawer"
               aria-label="${escapeHtml(ship.name)}, ${escapeHtml(ship.type)}, MMSI ${escapeHtml(ship.mmsi)}">
-        <span class="ship-row-top">
-          <span class="ship-name" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
-          <span class="type-tag ${escapeHtml(ship.type)}">${escapeHtml(ship.type)}</span>
+        <span class="flex min-w-0 flex-1 items-center gap-2">
+          <span class="truncate font-medium" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
+          <span class="rounded px-1.5 py-0.5 text-xs font-semibold uppercase ${typeColor(ship.type)}">${escapeHtml(ship.type)}</span>
         </span>
-        <span class="ship-row-meta">
+        <span class="flex items-center gap-2 text-xs text-slate-400">
           <span class="status-dot" data-el="dot"></span>
           <span data-el="speed"></span>
           <span data-el="heading"></span>
           <span data-el="status"></span>
-          <span class="mmsi">…${escapeHtml(ship.mmsi.slice(-4))}</span>
+          <span class="font-mono">…${escapeHtml(ship.mmsi.slice(-4))}</span>
         </span>
       </button>
-      <button class="fav-star" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
+      <button class="fav-star rounded p-1 text-slate-400 hover:text-amber-300" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>
       </button>`;
     listEl.appendChild(row);
