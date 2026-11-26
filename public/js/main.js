@@ -201,12 +201,8 @@ socket = connectSocket({
     // Playback = satu sumber kebenaran: nilai live drawer dibekukan.
     if (!history.isActive()) detail.refresh(ships);
     totalEl.textContent = visible;
-    // Follow: peta mengikuti kapal favorit selama panel riwayat tidak terbuka
-    const f = favorites.getFollow();
-    if (f && !history.isOpen()) {
-      const s = ships.find((x) => x.mmsi === f);
-      if (s) map.panTo([s.lat, s.lon], { animate: true, duration: 0.5 });
-    }
+    // Auto-follow dimatikan: peta sepenuhnya dikendalikan user (hindari bouncing).
+    // Fitur FOLLOW tetap tersedia via tombol, tapi tidak memaksa pan otomatis.
     if (!deepLinkDone && deepLinkMmsi && ships.some((s) => s.mmsi === deepLinkMmsi)) {
       deepLinkDone = true;
       fleet.setSelected(deepLinkMmsi);
