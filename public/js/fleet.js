@@ -6,7 +6,7 @@
 
 import { escapeHtml, TYPE_COLORS, matchShip } from './util.js';
 const typeColor = (t) => ({ ferry:'bg-sky-500/20 text-sky-300', cargo:'bg-amber-500/20 text-amber-300', tanker:'bg-rose-500/20 text-rose-300', tug:'bg-emerald-500/20 text-emerald-300' }[t] || 'bg-slate-500/20 text-slate-300');
-const typeIcon = (t) => ({ ferry:'⛴', cargo:'🚢', tanker:'🛢️', tug:'🛥️' }[t] || '🚢');
+const typeIcon = (t) => ({ ferry:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4a11.6 11.6 0 0 0 1.62 6"/><path d="M12 10V2"/></svg>', cargo:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="1"/><path d="M3 11h18"/><path d="M7 7V4h10v3"/></svg>', tanker:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20V10l6-6 6 6v10"/><path d="M10 20v-4h4v4"/></svg>', tug:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h18"/><path d="M5 17V9l4-4 4 4v8"/><path d="M13 17V7l3-3 3 3v10"/></svg>' }[t] || '';
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
