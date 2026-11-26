@@ -302,6 +302,12 @@ syncFilterUI();
 // ─── Toggle sidebar ─────────────────────────────────────────────────────────
 const sidebar = document.getElementById('sidebar');
 const openBtn = document.getElementById('openSidebarBtn');
+
+// ─── Help modal ─────────────────────────────────────────────────────────────
+const helpBtn = document.getElementById('helpBtn');
+const helpDlg = document.getElementById('helpDialog');
+document.getElementById('helpClose')?.addEventListener('click', () => helpDlg.close());
+helpBtn?.addEventListener('click', () => helpDlg.showModal());
 document.getElementById('toggleSidebar').addEventListener('click', () => {
   sidebar.classList.add('collapsed');
   openBtn.classList.add('visible');

@@ -105,6 +105,18 @@
     <div class="chart relative flex-1">
       <div id="map" class="map-dark h-full w-full"></div>
 
+      <!-- Legenda marker -->
+      <div id="legend" class="legend">
+        <div class="legend-title">LEGENDA</div>
+        <div class="legend-row"><span class="legend-dot live"></span>Kapal Live (Posisi Saat Ini)</div>
+        <div class="legend-row"><span class="legend-dot playback"></span>Kapal Playback (Posisi Masa Lalu)</div>
+        <div class="legend-row"><span class="legend-dot ghost"></span>Ghost Marker (Jejak/Bayangan)</div>
+        <div class="legend-row"><span class="legend-dot anomaly"></span>Anomali (Kecepatan/Lokasi Tidak Wajar)</div>
+      </div>
+
+      <!-- Tombol bantuan -->
+      <button id="helpBtn" class="help-btn" type="button" aria-label="Bantuan" title="Bantuan">?</button>
+
       <div id="staleBanner" class="stale-banner fixed left-1/2 top-20 z-30 -translate-x-1/2 rounded border border-amber-700 bg-amber-900/90 px-4 py-2 text-sm text-amber-100" role="status" aria-live="polite" hidden>
         <span id="staleText"></span>
         <button id="retryConn" class="banner-btn" type="button" hidden>COBA LAGI</button>
@@ -264,6 +276,23 @@
     <div class="p-4">
       <div id="usersList" class="space-y-2"></div>
       <p id="usersErr" class="form-err mt-3" role="alert" hidden></p>
+    </div>
+  </dialog>
+
+  <dialog id="helpDialog" class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="helpTitle">BANTUAN — AIS VTS CONSOLE</span>
+      <button type="button" class="icon-btn" id="helpClose" aria-label="Tutup">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-4 text-sm space-y-2">
+      <p><b>AIS VTS Console</b> adalah simulasi pemantauan kapal di Selat Madura &amp; Tanjung Perak.</p>
+      <p><b>Playback (Riwayat):</b> pilih kapal → buka RIWAYAT → geser slider atau tekan PLAY (1×/4×/16×). Saat playback aktif, marker live disembunyikan dan nilai live dibekukan.</p>
+      <p><b>Legenda:</b> 🟢 Live, 🔵 Playback, ⚪ Ghost, 🔴 Anomali (titik yang dibuang speed-gate).</p>
+      <p><b>Follow:</b> tombol FOLLOW membuat peta mengikuti kapal (opsional).</p>
+      <p><b>Filter:</b> Ferry/Cargo/Tanker/Tug/Favorit; pencarian nama/MMSI.</p>
+      <p class="text-slate-400 text-xs">Data simulasi — bukan feed AIS nyata.</p>
     </div>
   </dialog>
 
