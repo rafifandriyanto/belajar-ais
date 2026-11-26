@@ -35,7 +35,7 @@ html[data-palette="chart"] { --accent: #e05d5d; }
   .accent { @apply text-sky-400; }
   .wib-stat, .utc-stat, .fleet-stat { @apply items-end; }
   .display-control { @apply relative; }
-  .display-menu { @apply absolute right-0 top-full z-20 mt-1 flex w-48 flex-col gap-1 rounded border border-slate-700 bg-slate-900 p-2 shadow-lg; }
+  .display-menu { @apply absolute right-0 top-full z-50 mt-1 flex w-48 flex-col gap-1 rounded border border-slate-700 bg-slate-900 p-2 shadow-xl; }
   .display-menu-title { @apply block px-2 py-1 text-[10px] uppercase text-slate-500; }
   .display-menu-sep { @apply my-1 block h-px bg-slate-700; }
   .display-long { @apply hidden sm:inline; }
