@@ -78,6 +78,7 @@
 
       <span class="topbar-divider" aria-hidden="true"></span>
 
+      <button id="usersBtn" class="btn" hidden aria-label="Kelola user">USERS</button>
       <span id="authUser" class="auth-user" hidden></span>
       <button id="authBtn" class="btn" aria-label="Masuk">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -253,6 +254,19 @@
       <p id="edErr" class="form-err" role="alert" hidden></p>
       <button class="btn primary" id="edSubmit" type="submit">SIMPAN</button>
     </form>
+  </dialog>
+
+  <dialog id="usersDialog" class="modal wide">
+    <div class="modal-head">
+      <span class="modal-title" id="usersTitle">KELOLA USER</span>
+      <button type="button" class="icon-btn" id="usersClose" aria-label="Tutup">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-4">
+      <div id="usersList" class="space-y-2"></div>
+      <p id="usersErr" class="form-err mt-3" role="alert" hidden></p>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" role="status"></div>

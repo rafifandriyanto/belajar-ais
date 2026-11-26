@@ -158,6 +158,39 @@ router.post('/logout', sameOrigin, async (req, res) => {
   res.json({ status: 'success' });
 });
 
+// Manajemen user — hanya admin
+router.get('/users', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ status: 'error', message: 'Hanya admin' });
+  try {
+    const { rows } = await pool.query('SELECT id, username, role, created_at FROM users ORDER BY id');
+    res.json({ status: 'success', data: rows });
+  } catch (err) {
+    console.error('Gagal mengambil daftar user:', err.message);
+    pgDown(res);
+  }
+});
+
+router.delete('/users/:id', requireAuth, async (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ status: 'error', message: 'Hanya admin' });
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return bad(res, 'id tidak valid');
+  if (id === req.user.id) return res.status(400).json({ status: 'error', message: 'Tidak bisa menghapus akun sendiri' });
+  try {
+    const { rows } = await pool.query('SELECT role FROM users WHERE id = $1', [id]);
+    if (!rows.length) return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+    if (rows[0].role === 'admin') {
+      const c = await pool.query("SELECT count(*)::int AS n FROM users WHERE role='admin'");
+      if (c.rows[0].n <= 1) return res.status(400).json({ status: 'error', message: 'Tidak bisa menghapus admin terakhir' });
+    }
+    await pool.query('DELETE FROM users WHERE id = $1', [id]);
+    console.log('AUDIT', req.user.username, 'DELETE user', id);
+    res.json({ status: 'success', deleted: true });
+  } catch (err) {
+    console.error('Gagal menghapus user:', err.message);
+    pgDown(res);
+  }
+});
+
 async function me(req, res) {
   try {
     // Tanpa sesi adalah keadaan normal, bukan error. Mengembalikan 401 membuat
