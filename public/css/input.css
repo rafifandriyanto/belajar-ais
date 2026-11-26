@@ -4,6 +4,11 @@
 
 [hidden] { display: none !important; }
 
+html[data-palette="sonar"] { --accent: #ff7a29; }
+html[data-palette="phosphor"] { --accent: #3fd8c7; }
+html[data-palette="amber"] { --accent: #e8a33d; }
+html[data-palette="chart"] { --accent: #e05d5d; }
+
 @layer components {
   .btn { @apply inline-flex items-center gap-1.5 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-700; }
   .btn.primary { @apply border-sky-600 bg-sky-600 text-white hover:bg-sky-500; }
