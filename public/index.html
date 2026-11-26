@@ -118,7 +118,7 @@
       </button>
 
       <!-- ═══ PANEL RIWAYAT & PLAYBACK ═══ -->
-      <section id="historyPanel" class="history-panel">
+      <section id="historyPanel" class="history-panel absolute bottom-4 left-4 right-4 z-20 rounded-lg border border-slate-800 bg-slate-950/95 p-3 backdrop-blur">
         <div class="history-head">
           <span class="history-title">RIWAYAT</span>
           <span id="historyShip" class="history-ship"></span>
@@ -169,33 +169,33 @@
         </button>
       </div>
 
-      <nav class="view-nav" aria-label="Navigasi konsol">
+      <nav class="view-nav flex gap-1 rounded bg-slate-900 p-1" aria-label="Navigasi konsol">
         <button type="button" class="view-tab active" data-view="peta" aria-current="page">PETA</button>
         <button type="button" class="view-tab" data-view="armada">ARMADA</button>
         <button type="button" class="view-tab" data-view="riwayat">RIWAYAT</button>
       </nav>
 
-      <div class="search-row">
-        <input id="shipSearch" type="search" placeholder="Cari nama / MMSI" aria-label="Cari kapal berdasarkan nama atau MMSI" autocomplete="off">
+      <div class="search-row px-2 py-2">
+        <input id="shipSearch" type="search" placeholder="Cari nama / MMSI" aria-label="Cari kapal berdasarkan nama atau MMSI" autocomplete="off" class="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none">
       </div>
 
       <button id="filterToggle" class="filter-toggle" type="button" aria-expanded="false" aria-controls="filterGrid" hidden>
         <span>FILTER</span><span id="filterLabel" class="filter-label">4/4 tipe</span>
       </button>
 
-      <div class="filter-grid" id="filterGrid">
-        <button data-filter="ferry" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Ferry</button>
-        <button data-filter="cargo" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Cargo</button>
-        <button data-filter="tanker" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Tanker</button>
-        <button data-filter="tug" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Tug</button>
-        <button id="favFilter" class="filter-btn fav-chip" aria-pressed="false"><span class="dot"></span>Favorit</button>
+      <div class="filter-grid flex flex-wrap gap-2" id="filterGrid">
+        <button data-filter="ferry" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><span class="dot inline-block h-2 w-2 rounded-full bg-sky-400"></span>Ferry</button>
+        <button data-filter="cargo" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><span class="dot inline-block h-2 w-2 rounded-full bg-amber-400"></span>Cargo</button>
+        <button data-filter="tanker" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><span class="dot inline-block h-2 w-2 rounded-full bg-rose-400"></span>Tanker</button>
+        <button data-filter="tug" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><span class="dot inline-block h-2 w-2 rounded-full bg-emerald-400"></span>Tug</button>
+        <button id="favFilter" class="filter-btn fav-chip rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="false"><span class="dot inline-block h-2 w-2 rounded-full bg-amber-300"></span>Favorit</button>
       </div>
 
-      <div id="shipList" class="ship-list">
-        <div id="loadingState" class="state-box">
-          <div class="spinner"></div>
+      <div id="shipList" class="ship-list flex-1 overflow-y-auto p-2">
+        <div id="loadingState" class="state-box flex flex-col items-center gap-2 p-6 text-center text-slate-400">
+          <div class="spinner h-6 w-6 animate-spin rounded-full border-2 border-slate-600 border-t-sky-400"></div>
           <span>Menunggu data simulasi AIS...</span>
-          <span class="state-note">Kapal di layar ini adalah simulasi, bukan feed AIS nyata.</span>
+          <span class="state-note text-xs text-slate-500">Kapal di layar ini adalah simulasi, bukan feed AIS nyata.</span>
         </div>
       </div>
     </aside>
