@@ -77,7 +77,9 @@ async function startSession(res, userId, q = pool, secure = false) {
 
 // Sapuan sesi kedaluwarsa berkala (unref: tidak menahan proses/test)
 const sweep = setInterval(() => {
-  pool.query('DELETE FROM sessions WHERE expires_at <= now()').catch(() => {});
+  pool.query('DELETE FROM sessions WHERE expires_at <= now()').catch((err) => {
+    console.warn('Gagal membersihkan sesi kedaluwarsa:', err.message);
+  });
 }, 60000);
 sweep.unref();
 
@@ -114,7 +116,8 @@ router.post('/register', sameOrigin, async (req, res) => {
     } finally {
       client.release();
     }
-  } catch {
+  } catch (err) {
+    console.error('Gagal mendaftarkan user:', err.message);
     pgDown(res);
   }
 });
@@ -131,7 +134,8 @@ router.post('/login', sameOrigin, async (req, res) => {
     await pool.query('DELETE FROM sessions WHERE user_id = $1 AND expires_at <= now()', [rows[0].id]);
     await startSession(res, rows[0].id, pool, req.secure);
     res.json({ status: 'success', data: { id: rows[0].id, username: rows[0].username, role: rows[0].role } });
-  } catch {
+  } catch (err) {
+    console.error('Gagal login:', err.message);
     pgDown(res);
   }
 });
@@ -150,7 +154,8 @@ async function me(req, res) {
     // Tanpa sesi adalah keadaan normal, bukan error. Mengembalikan 401 membuat
     // browser mencatat console error setiap kali halaman dimuat.
     res.json({ status: 'success', data: await sessionUser(req) });
-  } catch {
+  } catch (err) {
+    console.error('Gagal mengambil sesi user (/me):', err.message);
     pgDown(res);
   }
 }

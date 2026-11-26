@@ -90,6 +90,8 @@ npm run seed
 npm run dev
 ```
 
+> **Kredensial database:** File `.env` tidak disertakan di repo. Salin `.env.example` ke `.env`, lalu isi `MONGODB_URI` dan `DATABASE_URL` dengan kredensial milikmu. **Jangan pernah commit file `.env` atau file kredensial lainnya** (mis. `atlas-credentials.env`). Jika memakai MongoDB Atlas, buat user & password sendiri di dashboard Atlas.
+
 Buka http://localhost:3000.
 
 `npm run seed` bisa dijalankan berulang. Seed mengisi kapal, rute, pelabuhan, particulars, dan akun admin bila `ADMIN_USERNAME`/`ADMIN_PASSWORD` disetel. Bila tidak ada, pendaftar pertama menjadi admin.
