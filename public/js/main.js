@@ -389,7 +389,7 @@ displayMenu.addEventListener('click', (e) => {
 });
 
 document.addEventListener('click', (e) => {
-  if (!displayMenu.hidden && !e.target.closest('.display-control')) closeDisplayMenu();
+  if (!displayMenu.hidden && !e.target.closest('#displayBtn') && !e.target.closest('#displayMenu')) closeDisplayMenu();
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !displayMenu.hidden) {
