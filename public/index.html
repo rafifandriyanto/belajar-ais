@@ -56,21 +56,21 @@
 
       <span class="topbar-divider" aria-hidden="true"></span>
 
-      <div class="display-control">
-        <button id="displayBtn" class="btn" aria-haspopup="menu" aria-expanded="false" aria-controls="displayMenu" aria-label="Tampilan: palet dan tema peta">
+      <div class="relative">
+        <button id="displayBtn" class="inline-flex items-center gap-1.5 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-haspopup="menu" aria-expanded="false" aria-controls="displayMenu" aria-label="Tampilan: palet dan tema peta">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 12l6.5-6.5"/>
           </svg>
-          <span class="display-long">Tampilan</span><span class="display-short">Tampil</span>
+          <span class="hidden sm:inline">Tampilan</span>
         </button>
-        <div id="displayMenu" class="display-menu" role="menu" aria-label="Tampilan" hidden>
-          <span class="display-menu-title">PALET</span>
-          <button type="button" role="menuitemradio" aria-checked="true" data-palette="sonar" class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-emerald-400"></span>Sonar</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-palette="phosphor" class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-green-300"></span>Phosphor</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-palette="amber" class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-amber-400"></span>Amber</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-palette="chart" class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-rose-400"></span>Chart</button>
-          <span class="display-menu-sep" aria-hidden="true"></span>
-          <button type="button" id="themeItem" role="menuitemcheckbox" aria-checked="true">Peta gelap</button>
+        <div id="displayMenu" class="absolute right-0 top-full z-50 mt-2 hidden w-48 flex-col gap-1 rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl" role="menu" aria-label="Tampilan" hidden>
+          <span class="px-2 py-1 text-[10px] uppercase tracking-wide text-slate-500">PALET</span>
+          <button type="button" role="menuitemradio" aria-checked="true" data-palette="sonar" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-emerald-400"></span>Sonar</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-palette="phosphor" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-green-300"></span>Phosphor</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-palette="amber" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-amber-400"></span>Amber</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-palette="chart" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-rose-400"></span>Chart</button>
+          <span class="my-1 h-px bg-slate-700" aria-hidden="true"></span>
+          <button type="button" id="themeItem" role="menuitemcheckbox" aria-checked="true" class="rounded px-2 py-1.5 text-left text-sm text-slate-200 hover:bg-slate-800">Peta gelap</button>
         </div>
       </div>
 

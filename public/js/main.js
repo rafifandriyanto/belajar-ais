@@ -361,12 +361,14 @@ function setDarkMode(on) {
 
 function openDisplayMenu() {
   syncDisplayMenu();
+  displayMenu.classList.remove('hidden');
   displayMenu.hidden = false;
   displayBtn.setAttribute('aria-expanded', 'true');
   displayMenu.querySelector('[aria-checked="true"]')?.focus();
 }
 
 function closeDisplayMenu() {
+  displayMenu.classList.add('hidden');
   displayMenu.hidden = true;
   displayBtn.setAttribute('aria-expanded', 'false');
 }
