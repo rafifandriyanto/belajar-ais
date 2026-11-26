@@ -30,11 +30,11 @@ export function initMap() {
   }).addTo(map);
 
   // Strip status konsol: koordinat kursor, zoom, jam UTC, datum
-  const statusEl = L.DomUtil.create('div', 'map-status');
+  const statusEl = L.DomUtil.create('div', 'flex items-center gap-2 rounded bg-slate-900/80 px-2 py-1 font-mono text-xs text-slate-200');
   statusEl.innerHTML = `
-    <span>POS <b data-el="pos">--</b></span><span class="sep">|</span>
-    <span>Z <b data-el="zoom">${MAP_ZOOM}</b></span><span class="sep">|</span>
-    <span><b data-el="clock">--:--:--</b> UTC</span><span class="sep">|</span>
+    <span>POS <b data-el="pos">--</b></span><span class="text-slate-500">|</span>
+    <span>Z <b data-el="zoom">${MAP_ZOOM}</b></span><span class="text-slate-500">|</span>
+    <span><b data-el="clock">--:--:--</b> UTC</span><span class="text-slate-500">|</span>
     <span>WGS-84</span>`;
   L.DomEvent.disableClickPropagation(statusEl);
   const StatusControl = L.Control.extend({ onAdd: () => statusEl });
