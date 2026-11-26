@@ -52,7 +52,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
       <div class="border-t border-slate-800 px-4 py-3" data-el="live"></div>
       <div class="space-y-1 px-4 py-3 text-sm">
         ${v ? row('Destination', escapeHtml(v.destination || '-')) : ''}
-        ${v ? row('ETA WIB', `<span data-el="eta">${fmtClock(v.etaIso).slice(0, 5)}</span>`) : ''}
+        ${v ? row('ETA', `<span data-el="eta">${fmtClock(v.etaIso).slice(0, 5)} WIB</span>`) : ''}
         ${v ? row('Sisa jarak', `<span data-el="nm">${fmtNm(v.remainingM)} nm</span>`) : ''}
       </div>
       <div class="flex flex-wrap gap-2 border-t border-slate-800 px-4 py-3">

@@ -23,7 +23,7 @@ export function fmtClock(d) {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   }).formatToParts(new Date(d));
   const v = (type) => parts.find((p) => p.type === type)?.value ?? '00';
-  return `${v('hour')}:${v('minute')}:${v('second')}`;
+  return `${v('hour')}:${v('minute')}:${v('second')} WIB`;
 }
 
 export const fmtSpeed = (kn) => `${Number(kn).toFixed(1)} kn`;

@@ -148,7 +148,7 @@ function paintStaleness() {
   const stale = booting ? false : bootFail || !online || (!!lastDataAt && age > 12000);
   document.body.classList.toggle('is-stale', stale);
   staleBanner.hidden = !stale;
-  retryBtn.hidden = !bootFail;
+  retryBtn.hidden = isOnline || booting;
   dataAgeEl.textContent = lastDataAt && age >= 2000 ? ageText(age) : '';
   if (!stale) return;
   staleText.textContent = bootFail
@@ -214,10 +214,8 @@ socket = connectSocket({
 });
 
 // ─── Jam topbar: WIB operasional + UTC datum ────────────────────────────────
-const utcEl = document.getElementById('utcClock');
 const wibEl = document.getElementById('wibClock');
 const tickClocks = () => {
-  utcEl.textContent = new Date().toISOString().slice(11, 19);
   wibEl.textContent = fmtClock(Date.now());
 };
 tickClocks();
