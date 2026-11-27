@@ -4,47 +4,135 @@
 
 [hidden] { display: none !important; }
 
-html[data-palette="sonar"] { --accent: #ff7a29; }
-html[data-palette="phosphor"] { --accent: #3fd8c7; }
-html[data-palette="amber"] { --accent: #e8a33d; }
-html[data-palette="chart"] { --accent: #e05d5d; }
+:root,
+html[data-palette="sonar"] {
+  --bg: #071017;
+  --panel: #0c1821;
+  --panel-2: #162836;
+  --border: #274052;
+  --border-hi: #436880;
+  --text: #f0f6fa;
+  --text-dim: #adc4d1;
+  --text-faint: #92aebf;
+  --accent: #38e2cf;
+  --accent-ink: #03211e;
+  --ferry: #7dd3fc;
+  --cargo: #fcd34d;
+  --tanker: #fda4af;
+  --tug: #6ee7b7;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.14);
+  --err: #fb7185;
+  --err-bg: rgba(251, 113, 133, 0.16);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
+}
+html[data-palette="phosphor"] {
+  --bg: #050d07;
+  --panel: #09160d;
+  --panel-2: #122618;
+  --border: #23472d;
+  --border-hi: #3b734a;
+  --text: #edf9ef;
+  --text-dim: #a9cfa9;
+  --text-faint: #8eb891;
+  --accent: #4ade80;
+  --accent-ink: #03220d;
+  --ferry: #7dd3fc;
+  --cargo: #fcd34d;
+  --tanker: #fda4af;
+  --tug: #6ee7b7;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.14);
+  --err: #fb7185;
+  --err-bg: rgba(251, 113, 133, 0.16);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
+}
+html[data-palette="amber"] {
+  --bg: #110c06;
+  --panel: #1a120a;
+  --panel-2: #291d11;
+  --border: #4a3520;
+  --border-hi: #735333;
+  --text: #fbf3e6;
+  --text-dim: #d6c2a7;
+  --text-faint: #bfa888;
+  --accent: #ffb02e;
+  --accent-ink: #241200;
+  --ferry: #7dd3fc;
+  --cargo: #fcd34d;
+  --tanker: #fda4af;
+  --tug: #6ee7b7;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.14);
+  --err: #fb7185;
+  --err-bg: rgba(251, 113, 133, 0.16);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
+}
+html[data-palette="chart"] {
+  --bg: #e7e1d1;
+  --panel: #faf7ef;
+  --panel-2: #eae3d2;
+  --border: #c4baa2;
+  --border-hi: #8c8168;
+  --text: #111c26;
+  --text-dim: #364552;
+  --text-faint: #4b5a68;
+  --accent: #b32b1c;
+  --accent-ink: #ffffff;
+  --ferry: #0369a1;
+  --cargo: #92400e;
+  --tanker: #b42318;
+  --tug: #146c38;
+  --ok: #146c38;
+  --ok-bg: rgba(20, 108, 56, 0.12);
+  --err: #b42318;
+  --err-bg: rgba(180, 35, 24, 0.12);
+  --warn: #92400e;
+  --warn-bg: rgba(180, 83, 9, 0.14);
+  --info: #0369a1;
+  --info-bg: rgba(3, 105, 161, 0.13);
+}
 
 @layer components {
-  .btn { @apply inline-flex items-center gap-1.5 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-100 hover:bg-slate-700; }
-  .btn.primary { @apply border-sky-600 bg-sky-600 text-white hover:bg-sky-500; }
-  .btn.danger { @apply border-rose-700 text-rose-300 hover:bg-rose-900/40; }
+  .btn { @apply inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold; }
   .btn.mono { @apply font-mono; }
-  .icon-btn { @apply inline-flex items-center justify-center rounded p-1.5 text-slate-300 hover:bg-slate-800 hover:text-slate-100; }
+  .icon-btn { @apply inline-flex items-center justify-center rounded p-1.5; }
   .field { @apply flex flex-col gap-1 text-sm; }
-  .field input, .field select { @apply rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none; }
-  .form-err { @apply rounded border border-rose-700 bg-rose-900/30 px-3 py-2 text-sm text-rose-200; }
+  .field input, .field select { @apply rounded border px-3 py-2 focus:outline-none; }
+  .form-err { @apply rounded border px-3 py-2 text-sm; }
   .modal-tabs { @apply flex gap-2; }
   .modal-demo { @apply flex gap-2; }
-  .topbar { @apply flex flex-wrap items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 py-2; }
+  .topbar { @apply flex flex-wrap items-center gap-3 border-b px-4 py-2; }
   .brand { @apply flex items-center gap-2; }
-  .brand-mark { @apply text-sky-400; }
   .brand-text { @apply flex flex-col leading-tight; }
   .brand-title { @apply text-sm font-bold tracking-wide; }
-  .brand-sub { @apply text-[10px] text-slate-400; }
+  .brand-sub { @apply text-[10px]; }
   .topbar-right { @apply flex flex-1 flex-wrap items-center justify-end gap-2; }
-  .topbar-divider { @apply h-5 w-px bg-slate-700; }
+  .topbar-divider { @apply h-5 w-px; }
   .stat { @apply flex flex-col leading-tight; }
-  .stat-label { @apply text-[10px] uppercase text-slate-400; }
+  .stat-label { @apply text-[10px] uppercase; }
   .stat-value { @apply font-mono text-sm font-semibold; }
-  .stat-age { @apply ml-1 text-[10px] text-slate-500; }
-  .accent { @apply text-sky-400; }
+  .stat-age { @apply ml-1 text-[10px]; }
   .wib-stat, .utc-stat, .fleet-stat { @apply items-end; }
   .display-control { @apply relative; }
-  .display-menu { @apply absolute right-0 top-full z-50 mt-1 flex w-48 flex-col gap-1 rounded border border-slate-700 bg-slate-900 p-2 shadow-xl; }
-  .display-menu-title { @apply block px-2 py-1 text-[10px] uppercase text-slate-500; }
-  .display-menu-sep { @apply my-1 block h-px bg-slate-700; }
+  .display-menu { @apply absolute right-0 top-full z-50 mt-1 flex w-48 flex-col gap-1 rounded border p-2 shadow-xl; }
+  .display-menu-title { @apply block px-2 py-1 text-[10px] uppercase; }
+  .display-menu-sep { @apply my-1 block h-px; }
   .display-long { @apply hidden sm:inline; }
   .display-short { @apply inline sm:hidden; }
-  .auth-user { @apply text-sm text-slate-300; }
-  .sim-badge { @apply rounded border border-amber-700 bg-amber-900/40 px-2 py-0.5 text-[10px] font-bold text-amber-300; }
-  .mode-badge { @apply rounded border border-sky-700 bg-sky-900/40 px-2 py-0.5 text-[10px] font-bold text-sky-300; }
+  .auth-user { @apply text-sm; }
+  .sim-badge { @apply rounded border px-2 py-0.5 text-[10px] font-bold; }
+  .mode-badge { @apply rounded border px-2 py-0.5 text-[10px] font-bold; }
   .conn-badge { @apply flex items-center gap-1.5 rounded px-2 py-1 text-xs font-semibold; }
-  .conn-badge.connecting { @apply bg-amber-500/20 text-amber-300; }
   .conn-dot { @apply h-2 w-2 rounded-full bg-current; }
   .main { @apply flex h-[calc(100vh-56px)] overflow-hidden; }
   .chart { @apply relative flex-1; }
@@ -52,68 +140,53 @@ html[data-palette="chart"] { --accent: #e05d5d; }
   .open-sidebar-btn { @apply hidden; }
   .open-sidebar-btn.visible { @apply flex; }
   .sidebar.collapsed { @apply hidden; }
-  .stale-banner { @apply fixed left-1/2 top-20 z-30 -translate-x-1/2 rounded border border-amber-700 bg-amber-900/90 px-4 py-2 text-sm text-amber-100; }
-  .banner-btn { @apply ml-2 rounded border border-amber-400 px-2 py-0.5 text-xs font-semibold hover:bg-amber-800; }
-  .history-panel { @apply absolute bottom-4 left-4 right-4 z-20 rounded-lg border border-slate-800 bg-slate-950/95 p-3 backdrop-blur; }
-  .history-head { @apply flex items-center gap-2 border-b border-slate-800 pb-2; }
-  .history-title { @apply text-xs font-bold tracking-wide text-slate-300; }
+  .stale-banner { @apply fixed left-1/2 top-20 z-30 -translate-x-1/2 rounded border px-4 py-2 text-sm; }
+  .banner-btn { @apply ml-2 rounded border px-2 py-0.5 text-xs font-semibold; }
+  .history-panel { @apply absolute bottom-4 left-4 right-4 z-20 rounded-lg border p-3 backdrop-blur; }
+  .history-head { @apply flex items-center gap-2 border-b pb-2; }
+  .history-title { @apply text-xs font-bold tracking-wide; }
   .history-ship { @apply text-sm font-semibold; }
-  .history-mmsi { @apply font-mono text-xs text-slate-400; }
+  .history-mmsi { @apply font-mono text-xs; }
   .history-slider-row { @apply flex items-center gap-2 py-2; }
   .history-time { @apply font-mono text-sm font-semibold; }
-  .history-zone { @apply text-[10px] text-slate-400; }
+  .history-zone { @apply text-[10px]; }
   .history-range { @apply flex-1; }
-  .range-ends { @apply flex justify-between text-[10px] text-slate-500; }
-  .history-count { @apply text-[10px] text-slate-400; }
+  .range-ends { @apply flex justify-between text-[10px]; }
+  .history-count { @apply text-[10px]; }
   .history-controls { @apply flex flex-wrap items-center gap-2 py-2; }
-  .history-readout { @apply text-xs text-slate-300; }
-  .history-hint { @apply text-slate-500; }
-  .history-anomaly { @apply text-xs text-amber-300; }
-  .history-end-note { @apply text-xs text-sky-300; }
-  .history-msg { @apply text-xs text-slate-400; }
-  .sidebar { @apply flex w-80 shrink-0 flex-col border-l border-slate-800 bg-slate-950; }
-  .sidebar-head { @apply flex items-center justify-between border-b border-slate-800 px-3 py-2; }
-  .sidebar-title { @apply text-xs font-bold tracking-wide text-slate-300; }
-  .view-nav { @apply flex gap-1 rounded bg-slate-900 p-1; }
-  .view-tab { @apply rounded px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-800 hover:text-slate-100; }
-  .view-tab.active { @apply bg-sky-600 text-white; }
+  .history-readout { @apply text-xs; }
+  .history-anomaly { @apply text-xs; }
+  .history-end-note { @apply text-xs; }
+  .history-msg { @apply text-xs; }
+  .sidebar { @apply flex w-80 shrink-0 flex-col border-l; }
+  .sidebar-head { @apply flex items-center justify-between border-b px-3 py-2; }
+  .sidebar-title { @apply text-xs font-bold tracking-wide; }
+  .view-nav { @apply flex gap-1 rounded p-1; }
+  .view-tab { @apply rounded px-3 py-1.5 text-xs font-semibold; }
   .search-row { @apply px-2 py-2; }
-  .filter-toggle { @apply flex w-full items-center justify-between rounded border border-slate-700 px-3 py-2 text-xs font-semibold; }
-  .filter-label { @apply text-slate-400; }
-  .filter-grid { @apply flex flex-wrap gap-2 px-2 py-2; }
-  .filter-btn { @apply inline-flex items-center gap-1.5 rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800; }
-  .filter-btn.active { @apply border-sky-500 text-sky-200; }
-  .fav-chip { @apply border-amber-700 text-amber-300; }
-  .dot { @apply inline-block h-2 w-2 rounded-full; }
+  .filter-toggle { @apply flex w-full items-center justify-between rounded border px-3 py-2 text-xs font-semibold; }
   .ship-list { @apply flex-1 overflow-y-auto p-2; }
-  .state-box { @apply flex flex-col items-center gap-2 p-6 text-center text-slate-400; }
-  .spinner { @apply h-6 w-6 animate-spin rounded-full border-2 border-slate-600 border-t-sky-400; }
-  .state-note { @apply text-xs text-slate-500; }
-  .modal { @apply fixed inset-0 m-auto w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-xl; }
+  .state-box { @apply flex flex-col items-center gap-2 p-6 text-center; }
+  .spinner { @apply h-6 w-6 animate-spin rounded-full border-2; }
+  .state-note { @apply text-xs; }
+  .modal { @apply fixed inset-0 m-auto w-full max-w-md rounded-lg border p-0 shadow-xl; }
   .modal.wide { @apply max-w-2xl; }
-  .modal-head { @apply flex items-center justify-between border-b border-slate-700 px-4 py-3; }
+  .modal-head { @apply flex items-center justify-between border-b px-4 py-3; }
   .modal-title { @apply text-base font-semibold; }
-  .modal-tabs { @apply flex gap-2; }
-  .modal-demo { @apply flex gap-2; }
-  .field { @apply flex flex-col gap-1 text-sm; }
-  .field input, .field select { @apply rounded border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 focus:border-sky-500 focus:outline-none; }
-  .form-err { @apply rounded border border-rose-700 bg-rose-900/30 px-3 py-2 text-sm text-rose-200; }
   .route-tools { @apply flex items-center gap-2; }
-  .toast { @apply fixed bottom-4 right-4 z-50 rounded border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 shadow-lg; }
-  .map-status { @apply flex items-center gap-2 rounded bg-slate-900/80 px-2 py-1 font-mono text-xs text-slate-200; }
-  .history-readout { @apply text-xs text-slate-300; }
+  .toast { @apply fixed bottom-4 right-4 z-50 rounded border px-4 py-2 text-sm shadow-lg; }
+  .map-status { @apply flex items-center gap-2 rounded px-2 py-1 font-mono text-xs; }
   .type-tag { @apply rounded px-1.5 py-0.5 text-xs font-semibold uppercase; }
-  .status-dot { @apply inline-block h-2 w-2 rounded-full bg-slate-500; }
-  .fav-star { @apply rounded p-1 text-slate-400 hover:text-amber-300; }
-  .ship-row { @apply flex items-center gap-2 rounded border border-slate-800 bg-slate-900/40 px-2 py-1.5; }
+  .status-dot { @apply inline-block h-2 w-2 rounded-full; }
+  .fav-star { @apply rounded p-1; }
+  .ship-row { @apply flex items-center gap-2 px-2 py-1.5; }
   .popup-row { @apply flex items-center justify-between gap-3 text-sm; }
-  .popup-row-label { @apply text-slate-400; }
   .popup-row-value { @apply font-medium; }
   .popup-type { @apply rounded px-2 py-0.5 text-xs font-semibold uppercase; }
-  .detail-head { @apply flex items-center justify-between border-b border-slate-800 px-4 py-3; }
+  .detail-head { @apply flex items-center justify-between border-b px-4 py-3; }
   .detail-title { @apply truncate text-base font-semibold; }
-  .detail-live { @apply border-t border-slate-800 px-4 py-3; }
-  .detail-actions { @apply flex flex-wrap gap-2 border-t border-slate-800 px-4 py-3; }
-  .detail-foot { @apply px-4 py-2 text-xs text-slate-500; }
-  .empty-state { @apply flex flex-col items-center gap-2 p-6 text-center text-slate-400; }
+  .detail-live { @apply border-t px-4 py-3; }
+  .detail-actions { @apply flex flex-wrap gap-2 border-t px-4 py-3; }
+  .detail-foot { @apply px-4 py-2 text-xs; }
+  .empty-state { @apply flex flex-col items-center gap-2 p-6 text-center; }
 }

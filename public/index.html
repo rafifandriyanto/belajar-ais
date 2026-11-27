@@ -22,7 +22,7 @@
 <body>
 
   <!-- ═══ TOPBAR ═══ -->
-  <header class="flex items-center gap-2 border-b border-slate-800 bg-slate-950 px-4 py-2">
+  <header class="relative z-[1100] flex items-center gap-2 border-b border-slate-800 bg-slate-950 px-4 py-2">
     <div class="brand flex items-center gap-2">
       <div class="brand-mark">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div class="topbar-right flex flex-1 items-center justify-end gap-2 overflow-hidden">
+    <div class="topbar-right flex flex-1 items-center justify-end gap-2">
       <div id="fleetStat" class="stat fleet-stat" title="Jumlah kapal yang lolos filter dan umur frame terakhir">
         <span class="stat-label">Armada</span>
         <span class="stat-value"><span id="totalShips" class="accent">--</span><span id="dataAge" class="stat-age"></span></span>
@@ -181,9 +181,9 @@
       </div>
 
       <nav class="view-nav flex gap-2 rounded bg-slate-900 p-2" aria-label="Navigasi konsol">
-        <button type="button" class="view-tab active flex items-center gap-1.5" data-view="peta" aria-current="page"><i class="bi bi-map"></i> PETA</button>
-        <button type="button" class="view-tab flex items-center gap-1.5" data-view="armada"><i class="bi bi-ship"></i> ARMADA</button>
-        <button type="button" class="view-tab flex items-center gap-1.5" data-view="riwayat"><i class="bi bi-clock-history"></i> RIWAYAT</button>
+        <button type="button" class="view-tab active flex items-center gap-1.5" data-view="peta" aria-current="page"><i class="bi bi-map" aria-hidden="true"></i> PETA</button>
+        <button type="button" class="view-tab flex items-center gap-1.5" data-view="armada"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19 17l2-5-9-3-9 3 2 5"/><path d="M12 9V3"/><path d="M9 5h6"/></svg> ARMADA</button>
+        <button type="button" class="view-tab flex items-center gap-1.5" data-view="riwayat"><i class="bi bi-clock-history" aria-hidden="true"></i> RIWAYAT</button>
       </nav>
 
       <div class="search-row px-2 py-2">
@@ -194,13 +194,7 @@
         <span>FILTER</span><span id="filterLabel" class="filter-label">4/4 tipe</span>
       </button>
 
-      <div class="filter-grid flex flex-wrap gap-2" id="filterGrid">
-        <button data-filter="ferry" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-water"></i> Ferry</button>
-        <button data-filter="cargo" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-box-seam"></i> Cargo</button>
-        <button data-filter="tanker" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-droplet"></i> Tanker</button>
-        <button data-filter="tug" class="filter-btn active rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="true"><i class="bi bi-truck"></i> Tug</button>
-        <button id="favFilter" class="filter-btn fav-chip rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold text-slate-200" aria-pressed="false"><span class="dot inline-block h-2 w-2 rounded-full bg-amber-300"></span>Favorit</button>
-      </div>
+      <div class="filter-grid grid grid-cols-2 gap-2 border-b border-slate-800 p-2" id="filterGrid"></div>
 
       <div id="shipList" class="ship-list flex-1 overflow-y-auto p-2">
         <div id="loadingState" class="state-box flex flex-col items-center gap-2 p-6 text-center text-slate-400">
@@ -235,7 +229,7 @@
     </form>
   </dialog>
 
-  <dialog id="editorDialog" class="modal wide fixed inset-0 m-auto w-full max-w-2xl rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-xl">
+  <dialog id="editorDialog" class="modal wide rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-xl">
     <form id="editorForm" method="dialog" class="flex flex-col gap-3 p-4">
       <div class="modal-head flex items-center justify-between">
         <span class="modal-title text-base font-semibold" id="editorTitle">TAMBAH KAPAL</span>
@@ -246,7 +240,11 @@
       <div class="form-grid">
         <label class="field"><span>Nama</span><input id="edName" required maxlength="100"></label>
         <label class="field"><span>MMSI (9 digit)</span><input id="edMmsi" required pattern="\d{9}" inputmode="numeric"></label>
-        <label class="field"><span>Tipe</span><select id="edType"><option value="ferry">ferry</option><option value="cargo">cargo</option><option value="tanker">tanker</option><option value="tug">tug</option></select></label>
+        <div class="field col-span-full">
+          <span id="edTypeLabel">Tipe</span>
+          <input type="hidden" id="edType" value="cargo">
+          <div id="edTypeGroup" class="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-labelledby="edTypeLabel"></div>
+        </div>
         <label class="field"><span>Kecepatan (kn)</span><input id="edSpeed" type="number" min="1" max="30" step="0.1" value="12"></label>
         <label class="field"><span>Sandar (detik)</span><input id="edDwell" type="number" min="0" max="3600" value="20"></label>
         <label class="field"><span>Destination</span><input id="edDest" maxlength="60"></label>

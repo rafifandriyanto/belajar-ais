@@ -3,7 +3,7 @@
  */
 
 import { initMap } from './map.js';
-import { createFleet } from './fleet.js';
+import { createFleet, renderFilterButtons } from './fleet.js';
 import { createHistory } from './history.js';
 import { createFavorites } from './favorites.js';
 import { createDetail } from './detail.js';
@@ -78,6 +78,10 @@ const detail = createDetail(document.querySelector('.main'), {
   },
   onFollow: (mmsi) => {
     const f = favorites.setFollow(mmsi);
+    if (f) {
+      const d = fleet.getShip(mmsi);
+      if (d) map.panTo([d.lat, d.lon], { animate: true, duration: 0.6 });
+    }
     toast(f ? 'Follow aktif, peta mengikuti kapal' : 'Follow dimatikan');
   },
   onError: (msg) => toast(msg),
@@ -201,8 +205,11 @@ socket = connectSocket({
     // Playback = satu sumber kebenaran: nilai live drawer dibekukan.
     if (!history.isActive()) detail.refresh(ships);
     totalEl.textContent = visible;
-    // Auto-follow dimatikan: peta sepenuhnya dikendalikan user (hindari bouncing).
-    // Fitur FOLLOW tetap tersedia via tombol, tapi tidak memaksa pan otomatis.
+    const followMmsi = favorites.getFollow();
+    if (followMmsi && !history.isActive()) {
+      const fShip = ships.find((s) => s.mmsi === followMmsi);
+      if (fShip) map.panTo([fShip.lat, fShip.lon], { animate: true, duration: 0.6 });
+    }
     if (!deepLinkDone && deepLinkMmsi && ships.some((s) => s.mmsi === deepLinkMmsi)) {
       deepLinkDone = true;
       fleet.setSelected(deepLinkMmsi);
@@ -257,7 +264,9 @@ viewTabs.forEach((tab) => {
   });
 });
 
-// ─── Filter favorit ─────────────────────────────────────────────────────────
+// ─── Filter tipe kapal & favorit ────────────────────────────────────────────
+renderFilterButtons('#filterGrid');
+
 document.getElementById('favFilter').addEventListener('click', (e) => {
   const btn = e.currentTarget;
   const on = !btn.classList.contains('active');
@@ -267,8 +276,7 @@ document.getElementById('favFilter').addEventListener('click', (e) => {
   syncFilterUI();
 });
 
-// ─── Filter tipe kapal ──────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn').forEach((btn) => {
+document.querySelectorAll('.filter-btn[data-filter]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const count = fleet.toggleFilter(btn.dataset.filter);
     btn.classList.toggle('active');
@@ -333,7 +341,12 @@ authCanEdit = (ship) => auth.canEdit(ship);
 document.getElementById('authBtn').addEventListener('click', () => auth.open('login'));
 document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
 
-const editor = createEditor(map, { onSaved: () => toast('Kapal disimpan, live di peta') });
+const editor = createEditor(map, {
+  onSaved: (saved) => {
+    toast('Kapal disimpan, live di peta');
+    if (saved?.mmsi && detail.isOpen(saved.mmsi)) detail.open(saved.mmsi);
+  },
+});
 editorOpen = (ship) => editor.open(ship);
 document.getElementById('addShipBtn').addEventListener('click', () => editor.open(null));
 
@@ -362,6 +375,7 @@ function setDarkMode(on) {
 function openDisplayMenu() {
   syncDisplayMenu();
   displayMenu.classList.remove('hidden');
+  displayMenu.classList.add('flex');
   displayMenu.hidden = false;
   displayBtn.setAttribute('aria-expanded', 'true');
   displayMenu.querySelector('[aria-checked="true"]')?.focus();
@@ -369,6 +383,7 @@ function openDisplayMenu() {
 
 function closeDisplayMenu() {
   displayMenu.classList.add('hidden');
+  displayMenu.classList.remove('flex');
   displayMenu.hidden = true;
   displayBtn.setAttribute('aria-expanded', 'false');
 }

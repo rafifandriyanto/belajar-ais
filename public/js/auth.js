@@ -26,9 +26,9 @@ export function createAuth({ onChange }) {
   document.getElementById('tabRegister').addEventListener('click', () => setTab('register'));
   document.getElementById('authClose').addEventListener('click', () => dlg.close());
 
-  async function doLogin(username, password) {
+  async function submitAuth(endpoint, username, password) {
     err.hidden = true;
-    const r = await fetch('/api/auth/login', {
+    const r = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -44,12 +44,13 @@ export function createAuth({ onChange }) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await doLogin(uEl.value, pEl.value);
+    const endpoint = tab === 'register' ? '/api/auth/register' : '/api/auth/login';
+    await submitAuth(endpoint, uEl.value, pEl.value);
   });
 
   const demoCreds = { demoAdmin: ['demo_admin', 'DemoPass123!'], demoOperator: ['demo_operator', 'DemoPass123!'] };
   for (const [id, [u, p]] of Object.entries(demoCreds)) {
-    document.getElementById(id)?.addEventListener('click', () => doLogin(u, p));
+    document.getElementById(id)?.addEventListener('click', () => submitAuth('/api/auth/login', u, p));
   }
 
   const usersBtn = document.getElementById('usersBtn');

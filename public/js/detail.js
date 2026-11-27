@@ -1,5 +1,6 @@
 /** detail.js — Panel detail kapal: particulars, voyage, aksi favorit/follow/riwayat/edit. */
 import { escapeHtml, fmtClock, fmtCoord, fmtNm } from './util.js';
+import { typeIcon } from './fleet.js';
 const typeColor = (t) => ({ ferry:'bg-sky-500/20 text-sky-300', cargo:'bg-amber-500/20 text-amber-300', tanker:'bg-rose-500/20 text-rose-300', tug:'bg-emerald-500/20 text-emerald-300' }[t] || 'bg-slate-500/20 text-slate-300');
 
 export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, onEdit, onDelete, onFollow, onError, onClose }) {
@@ -41,7 +42,7 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
-      <span class="mx-4 mt-3 inline-block rounded px-2 py-0.5 text-xs font-semibold uppercase ${typeColor(s.type)}">${escapeHtml(s.type)}</span>
+      <span class="mx-4 mt-3 inline-flex w-fit items-center gap-1.5 rounded px-2 py-0.5 text-xs font-semibold uppercase ${typeColor(s.type)}">${typeIcon(s.type)} ${escapeHtml(s.type)}</span>
       <div class="space-y-1 px-4 py-3 text-sm">
         ${row('MMSI', escapeHtml(s.mmsi))}
         ${s.imo ? row('IMO', escapeHtml(s.imo)) : ''}
@@ -135,11 +136,11 @@ export function createDetail(mainEl, { favorites, canEdit, getDyn, onHistory, on
           current.voyage = j.data.voyage;
           const eta = el.querySelector('[data-el="eta"]');
           const nm = el.querySelector('[data-el="nm"]');
-          if (eta && current.voyage) eta.textContent = fmtClock(current.voyage.etaIso).slice(0, 5);
+          if (eta && current.voyage) eta.textContent = `${fmtClock(current.voyage.etaIso).slice(0, 5)} WIB`;
           if (nm && current.voyage) nm.textContent = `${fmtNm(current.voyage.remainingM)} nm`;
         }
       }).catch(() => {});
     }
   }
-  return { open, close, refresh, rerender: render, isOpen: () => !el.hidden };
+  return { open, close, refresh, rerender: render, isOpen: (mmsi) => !el.hidden && (!mmsi || current?.mmsi === mmsi) };
 }
