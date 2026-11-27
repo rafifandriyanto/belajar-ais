@@ -330,7 +330,22 @@ const auth = createAuth({
   onChange: (u) => {
     const userEl = document.getElementById('authUser');
     userEl.hidden = !u;
-    userEl.textContent = u ? `${u.username} · ${u.role}` : '';
+    if (u) {
+      const icon = document.createElement('i');
+      icon.className = `bi ${u.role === 'admin' ? 'bi-shield-check' : 'bi-person-circle'}`;
+      icon.setAttribute('aria-hidden', 'true');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'auth-name';
+      nameSpan.textContent = u.username;
+      const roleSpan = document.createElement('span');
+      roleSpan.className = 'auth-role';
+      roleSpan.textContent = u.role;
+      userEl.dataset.role = u.role;
+      userEl.replaceChildren(icon, nameSpan, roleSpan);
+    } else {
+      delete userEl.dataset.role;
+      userEl.textContent = '';
+    }
     document.getElementById('authBtn').hidden = !!u;
     document.getElementById('logoutBtn').hidden = !u;
     document.getElementById('addShipBtn').hidden = !u;

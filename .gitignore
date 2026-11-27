@@ -6,3 +6,4 @@ node_modules/
 atlas-credentials.env
 .superpowers/
 .impeccable/
+.agents/
