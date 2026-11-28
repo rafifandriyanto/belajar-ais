@@ -14,7 +14,7 @@ Konsol ini memantau pergerakan kapal di Selat Madura dan Pelabuhan Tanjung Perak
 - **Filter dan navigasi**: filter Ferry, Cargo, Tanker, Tug, dan Favorit. Di layar ≤600px filter jadi satu tombol FILTER. Sidebar punya tab PETA, ARMADA, dan RIWAYAT.
 - **Akun dan CRUD kapal**: daftar dan masuk dengan peran admin atau operator. Admin mengelola semua kapal, operator hanya kapalnya sendiri. Form tambah/edit memakai klik peta untuk waypoint, dengan undo dan clear. Perubahan langsung muncul di semua client lewat `fleet:update`.
 - **Status koneksi**: badge awal `MENYAMBUNG`, lalu `LIVE` setelah frame pertama. Socket gagal atau data berhenti lebih dari 12 detik memunculkan umur data dan banner, disertai tombol COBA LAGI bila belum ada data sama sekali.
-- **Tampilan**: menu Tampilan berisi empat palet (sonar, phosphor, amber, chart) dan pilihan tema peta gelap atau terang. Pilihan disimpan lokal. Chip SIMULASI selalu terlihat di topbar.
+- **Tampilan**: menu Tampilan berisi empat palet (sonar, phosphor, amber, chart) dan pilihan tema peta gelap atau terang. Pilihan disimpan lokal. Indikator SIMULASI menyatu dengan badge status koneksi di topbar.
 - **Deep link**: `?ship=<mmsi>` membuka detail dan riwayat kapal. Parameter `from` dan `to` ISO 8601 membatasi rentang waktu.
 
 ![Panel detail kapal](docs/screenshots/detail.png)
@@ -34,7 +34,7 @@ Palet lain: [sonar](docs/screenshots/v21-palette-sonar.png), [phosphor](docs/scr
 - Panel detail tidak lagi menutup daftar kapal. Di desktop ia jadi kolom ketiga; di bawah 1024px jadi bottom sheet.
 - Panel riwayat berada di kolom peta sehingga tombolnya tidak tertutup panel detail.
 - Saat playback, hanya track dan playhead yang menonjol. Marker live, jejak, dan ring seleksi disembunyikan.
-- Topbar dikelompokkan dalam tiga bagian. Jam WIB dan UTC tetap keduanya. Tombol tema dan palet digabung menjadi menu Tampilan.
+- Topbar desktop diringkas: jam WIB dan UTC tampil berdampingan tanpa label berulang, aksi akun (Kelola User dan Keluar) digabung ke dropdown profil, menu Tampilan menggabungkan palet dan tema peta, dan indikator SIMULASI menyatu dengan badge status koneksi.
 - Sidebar mendapat navigasi PETA, ARMADA, dan RIWAYAT.
 - Font berganti ke Fira Sans untuk antarmuka dan Fira Code untuk angka. Teks fungsional minimal 12px.
 - Koneksi awal yang gagal tidak lagi menampilkan badge LIVE. Status `MENYAMBUNG`, `BELUM ADA DATA`, dan tombol COBA LAGI menggantikannya.
