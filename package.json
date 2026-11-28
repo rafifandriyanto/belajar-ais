@@ -7,7 +7,9 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node db/seed.js",
-    "test": "node --test"
+    "test": "node --test",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./public/css/input.css -o ./public/css/tailwind.css --watch"
   },
   "keywords": [
     "ais",
@@ -24,5 +26,10 @@
     "mongoose": "^9.11.0",
     "pg": "^8.23.1",
     "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.7.0",
+    "postcss": "^8.5.33",
+    "tailwindcss": "^3.4.19"
   }
 }

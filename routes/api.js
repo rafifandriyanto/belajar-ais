@@ -80,6 +80,7 @@ router.post('/ships', requireAuth, sameOrigin, (req, res) => withLock(req.body?.
   }
   setStatic({ ...b, name: b.name.trim(), owner_id: req.user.id });
   sim.upsertShip({ mmsi: b.mmsi, route: b.route, speedKn: b.speedKn, dwellSeconds: b.dwellSeconds || 0 });
+  console.log('AUDIT', req.user.username, 'CREATE ship', b.mmsi);
   emitFleet(req);
   res.status(201).json({ status: 'success', data: getStatic(b.mmsi) });
 }));
@@ -128,6 +129,7 @@ router.put('/ships/:mmsi', requireAuth, sameOrigin, (req, res) => withLock(req.p
   }
   setStatic({ mmsi: cur.mmsi, name: b.name ?? cur.name, type: b.type ?? cur.type, imo: b.imo ?? cur.imo, callSign: b.callSign ?? cur.call_sign, flag: b.flag ?? cur.flag, lengthM: b.lengthM ?? cur.length_m, beamM: b.beamM ?? cur.beam_m, destination: b.destination ?? cur.destination, route, speedKn, dwellSeconds: dwell });
   sim.upsertShip({ mmsi: cur.mmsi, route, speedKn, dwellSeconds: dwell });
+  console.log('AUDIT', req.user.username, 'UPDATE ship', cur.mmsi);
   emitFleet(req);
   res.json({ status: 'success', data: getStatic(cur.mmsi) });
 }));
@@ -140,6 +142,7 @@ router.delete('/ships/:mmsi', requireAuth, sameOrigin, (req, res) => withLock(re
     await pool.query('DELETE FROM ships WHERE mmsi = $1', [req.params.mmsi]);
     dropStatic(req.params.mmsi);
     sim.removeShip(req.params.mmsi);
+    console.log('AUDIT', req.user.username, 'DELETE ship', req.params.mmsi);
     emitFleet(req);
     res.json({ status: 'success', deleted: true });
   } catch {

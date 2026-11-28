@@ -3,7 +3,7 @@
  */
 
 import { initMap } from './map.js';
-import { createFleet } from './fleet.js';
+import { createFleet, renderFilterButtons } from './fleet.js';
 import { createHistory } from './history.js';
 import { createFavorites } from './favorites.js';
 import { createDetail } from './detail.js';
@@ -21,7 +21,11 @@ loadPorts();
 requestAnimationFrame(() => map.invalidateSize());
 window.addEventListener('resize', () => map.invalidateSize());
 if (typeof ResizeObserver === 'function') {
-  new ResizeObserver(() => map.invalidateSize()).observe(document.getElementById('map'));
+  let roTimer = null;
+  new ResizeObserver(() => {
+    clearTimeout(roTimer);
+    roTimer = setTimeout(() => map.invalidateSize(), 120);
+  }).observe(document.getElementById('map'));
 }
 
 // ─── Nav konsol: satu sumber keadaan untuk tab ──────────────────────────────
@@ -74,6 +78,10 @@ const detail = createDetail(document.querySelector('.main'), {
   },
   onFollow: (mmsi) => {
     const f = favorites.setFollow(mmsi);
+    if (f) {
+      const d = fleet.getShip(mmsi);
+      if (d) map.panTo([d.lat, d.lon], { animate: true, duration: 0.6 });
+    }
     toast(f ? 'Follow aktif, peta mengikuti kapal' : 'Follow dimatikan');
   },
   onError: (msg) => toast(msg),
@@ -120,7 +128,6 @@ const connLabel = document.getElementById('connLabel');
 const staleBanner = document.getElementById('staleBanner');
 const staleText = document.getElementById('staleText');
 const retryBtn = document.getElementById('retryConn');
-const fleetStat = document.getElementById('fleetStat');
 const dataAgeEl = document.getElementById('dataAge');
 const bootAt = Date.now();
 // Tidak pernah anggap live sebelum frame pertama tiba.
@@ -144,7 +151,7 @@ function paintStaleness() {
   const stale = booting ? false : bootFail || !online || (!!lastDataAt && age > 12000);
   document.body.classList.toggle('is-stale', stale);
   staleBanner.hidden = !stale;
-  retryBtn.hidden = !bootFail;
+  retryBtn.hidden = online || booting;
   dataAgeEl.textContent = lastDataAt && age >= 2000 ? ageText(age) : '';
   if (!stale) return;
   staleText.textContent = bootFail
@@ -172,7 +179,6 @@ retryBtn.addEventListener('click', () => {
 });
 
 // ─── Socket ─────────────────────────────────────────────────────────────────
-const totalEl = document.getElementById('totalShips');
 let loadingRemoved = false;
 
 // Deep link: ?ship=<mmsi> membuka riwayat kapal itu saat data pertama tiba.
@@ -193,15 +199,13 @@ socket = connectSocket({
       document.getElementById('loadingState')?.remove();
       loadingRemoved = true;
     }
-    const visible = fleet.update(ships);
+    fleet.update(ships);
     // Playback = satu sumber kebenaran: nilai live drawer dibekukan.
     if (!history.isActive()) detail.refresh(ships);
-    totalEl.textContent = visible;
-    // Follow: peta mengikuti kapal favorit selama panel riwayat tidak terbuka
-    const f = favorites.getFollow();
-    if (f && !history.isOpen()) {
-      const s = ships.find((x) => x.mmsi === f);
-      if (s) map.panTo([s.lat, s.lon], { animate: true, duration: 0.5 });
+    const followMmsi = favorites.getFollow();
+    if (followMmsi && !history.isActive()) {
+      const fShip = ships.find((s) => s.mmsi === followMmsi);
+      if (fShip) map.panTo([fShip.lat, fShip.lon], { animate: true, duration: 0.6 });
     }
     if (!deepLinkDone && deepLinkMmsi && ships.some((s) => s.mmsi === deepLinkMmsi)) {
       deepLinkDone = true;
@@ -217,8 +221,9 @@ socket = connectSocket({
 const utcEl = document.getElementById('utcClock');
 const wibEl = document.getElementById('wibClock');
 const tickClocks = () => {
-  utcEl.textContent = new Date().toISOString().slice(11, 19);
-  wibEl.textContent = fmtClock(Date.now());
+  const now = Date.now();
+  utcEl.textContent = new Date(now).toISOString().slice(11, 19);
+  wibEl.textContent = fmtClock(now).replace(/\s*WIB$/, '');
 };
 tickClocks();
 setInterval(tickClocks, 1000);
@@ -228,13 +233,13 @@ const searchEl = document.getElementById('shipSearch');
 let searchTimer = null;
 searchEl.addEventListener('input', () => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { totalEl.textContent = fleet.setSearch(searchEl.value); }, 120);
+  searchTimer = setTimeout(() => { fleet.setSearch(searchEl.value); }, 120);
 });
 searchEl.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowDown') { e.preventDefault(); fleet.moveKbd(1); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); fleet.moveKbd(-1); }
   else if (e.key === 'Enter') { e.preventDefault(); fleet.selectKbd(); }
-  else if (e.key === 'Escape') { searchEl.value = ''; totalEl.textContent = fleet.setSearch(''); searchEl.blur(); }
+  else if (e.key === 'Escape') { searchEl.value = ''; fleet.setSearch(''); searchEl.blur(); }
 });
 
 // ─── Nav konsol: aksi tab, keadaan tab diatur oleh onModeChange ─────────────
@@ -259,23 +264,23 @@ viewTabs.forEach((tab) => {
   });
 });
 
-// ─── Filter favorit ─────────────────────────────────────────────────────────
+// ─── Filter tipe kapal & favorit ────────────────────────────────────────────
+renderFilterButtons('#filterGrid');
+
 document.getElementById('favFilter').addEventListener('click', (e) => {
   const btn = e.currentTarget;
   const on = !btn.classList.contains('active');
   btn.classList.toggle('active', on);
   btn.setAttribute('aria-pressed', String(on));
-  totalEl.textContent = fleet.setFavFilter(on);
+  fleet.setFavFilter(on);
   syncFilterUI();
 });
 
-// ─── Filter tipe kapal ──────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn').forEach((btn) => {
+document.querySelectorAll('.filter-btn[data-filter]').forEach((btn) => {
   btn.addEventListener('click', () => {
-    const count = fleet.toggleFilter(btn.dataset.filter);
+    fleet.toggleFilter(btn.dataset.filter);
     btn.classList.toggle('active');
     btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
-    totalEl.textContent = count;
     syncFilterUI();
   });
 });
@@ -304,6 +309,12 @@ syncFilterUI();
 // ─── Toggle sidebar ─────────────────────────────────────────────────────────
 const sidebar = document.getElementById('sidebar');
 const openBtn = document.getElementById('openSidebarBtn');
+
+// ─── Help modal ─────────────────────────────────────────────────────────────
+const helpBtn = document.getElementById('helpBtn');
+const helpDlg = document.getElementById('helpDialog');
+document.getElementById('helpClose')?.addEventListener('click', () => helpDlg.close());
+helpBtn?.addEventListener('click', () => helpDlg.showModal());
 document.getElementById('toggleSidebar').addEventListener('click', () => {
   sidebar.classList.add('collapsed');
   openBtn.classList.add('visible');
@@ -313,12 +324,74 @@ openBtn.addEventListener('click', () => {
   openBtn.classList.remove('visible');
 });
 
-// ─── Auth + editor kapal ────────────────────────────────────────────────────
+// ─── Helper dropdown menu topbar (dipakai Tampilan & Akun) ───────────────────
+const dropdowns = [];
+function createDropdown(btn, menu, { onOpen, focusSelector } = {}) {
+  function open() {
+    for (const d of dropdowns) if (d.menu !== menu) d.close();
+    onOpen?.();
+    menu.classList.remove('hidden');
+    menu.classList.add('flex');
+    menu.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    (focusSelector ? menu.querySelector(focusSelector) : menu.querySelector('[role^="menuitem"]:not([hidden])'))?.focus();
+  }
+  function close() {
+    menu.classList.add('hidden');
+    menu.classList.remove('flex');
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  btn.addEventListener('click', () => {
+    if (menu.hidden) open(); else close();
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !btn.contains(e.target) && !menu.contains(e.target)) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.hidden) {
+      e.stopPropagation();
+      close();
+      btn.focus();
+    }
+  }, true);
+  const api = { open, close, btn, menu };
+  dropdowns.push(api);
+  return api;
+}
+
+// ─── Auth + dropdown akun + editor kapal ────────────────────────────────────
+const authUserBtn = document.getElementById('authUser');
+const accountMenu = document.getElementById('accountMenu');
+const accountMeta = document.getElementById('accountMeta');
+const accountDropdown = createDropdown(authUserBtn, accountMenu);
+
 const auth = createAuth({
   onChange: (u) => {
-    const userEl = document.getElementById('authUser');
-    userEl.hidden = !u;
-    userEl.textContent = u ? `${u.username} · ${u.role}` : '';
+    accountDropdown.close();
+    authUserBtn.hidden = !u;
+    if (u) {
+      const icon = document.createElement('i');
+      icon.className = `bi ${u.role === 'admin' ? 'bi-shield-check' : 'bi-person-circle'}`;
+      icon.setAttribute('aria-hidden', 'true');
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'auth-name';
+      nameSpan.textContent = u.username;
+      const srRole = document.createElement('span');
+      srRole.className = 'sr-only';
+      srRole.textContent = ` · ${u.role}`;
+      const caret = document.createElement('i');
+      caret.className = 'bi bi-chevron-down text-[10px] opacity-70';
+      caret.setAttribute('aria-hidden', 'true');
+      authUserBtn.dataset.role = u.role;
+      authUserBtn.setAttribute('aria-label', `Akun ${u.username} (${u.role})`);
+      authUserBtn.replaceChildren(icon, nameSpan, srRole, caret);
+      if (accountMeta) accountMeta.textContent = `${u.username} · ${u.role.toUpperCase()}`;
+    } else {
+      delete authUserBtn.dataset.role;
+      authUserBtn.textContent = '';
+      if (accountMeta) accountMeta.textContent = '';
+    }
     document.getElementById('authBtn').hidden = !!u;
     document.getElementById('logoutBtn').hidden = !u;
     document.getElementById('addShipBtn').hidden = !u;
@@ -327,9 +400,18 @@ const auth = createAuth({
 });
 authCanEdit = (ship) => auth.canEdit(ship);
 document.getElementById('authBtn').addEventListener('click', () => auth.open('login'));
-document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
+document.getElementById('usersBtn').addEventListener('click', () => accountDropdown.close());
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  accountDropdown.close();
+  auth.logout();
+});
 
-const editor = createEditor(map, { onSaved: () => toast('Kapal disimpan, live di peta') });
+const editor = createEditor(map, {
+  onSaved: (saved) => {
+    toast('Kapal disimpan, live di peta');
+    if (saved?.mmsi && detail.isOpen(saved.mmsi)) detail.open(saved.mmsi);
+  },
+});
 editorOpen = (ship) => editor.open(ship);
 document.getElementById('addShipBtn').addEventListener('click', () => editor.open(null));
 
@@ -355,43 +437,21 @@ function setDarkMode(on) {
   syncDisplayMenu();
 }
 
-function openDisplayMenu() {
-  syncDisplayMenu();
-  displayMenu.hidden = false;
-  displayBtn.setAttribute('aria-expanded', 'true');
-  displayMenu.querySelector('[aria-checked="true"]')?.focus();
-}
-
-function closeDisplayMenu() {
-  displayMenu.hidden = true;
-  displayBtn.setAttribute('aria-expanded', 'false');
-}
-
-displayBtn.addEventListener('click', () => {
-  if (displayMenu.hidden) openDisplayMenu(); else closeDisplayMenu();
+const displayDropdown = createDropdown(displayBtn, displayMenu, {
+  onOpen: syncDisplayMenu,
+  focusSelector: '[aria-checked="true"]',
 });
 
 displayMenu.addEventListener('click', (e) => {
   const pal = e.target.closest('[data-palette]');
   if (pal) {
     applyPalette(pal.dataset.palette);
-    closeDisplayMenu();
+    displayDropdown.close();
     displayBtn.focus();
     return;
   }
   if (e.target.closest('#themeItem')) setDarkMode(!dark);
 });
-
-document.addEventListener('click', (e) => {
-  if (!displayMenu.hidden && !e.target.closest('.display-control')) closeDisplayMenu();
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !displayMenu.hidden) {
-    e.stopPropagation();
-    closeDisplayMenu();
-    displayBtn.focus();
-  }
-}, true);
 
 function applyPalette(name, silent) {
   document.documentElement.dataset.palette = name;

@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[hidden] { display: none !important; }
+
+:root,
+html[data-palette="sonar"] {
+  --bg: #071017;
+  --panel: #0c1821;
+  --panel-2: #162836;
+  --border: #274052;
+  --border-hi: #436880;
+  --text: #f0f6fa;
+  --text-dim: #adc4d1;
+  --text-faint: #92aebf;
+  --accent: #38e2cf;
+  --accent-ink: #03211e;
+  --ferry: #7dd3fc;
+  --cargo: #fcd34d;
+  --tanker: #fda4af;
+  --tug: #6ee7b7;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.14);
+  --err: #fb7185;
+  --err-bg: rgba(251, 113, 133, 0.16);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
+}
+html[data-palette="phosphor"] {
+  --bg: #050d07;
+  --panel: #09160d;
+  --panel-2: #122618;
+  --border: #23472d;
+  --border-hi: #3b734a;
+  --text: #edf9ef;
+  --text-dim: #a9cfa9;
+  --text-faint: #8eb891;
+  --accent: #4ade80;
+  --accent-ink: #03220d;
+  --ferry: #7dd3fc;
+  --cargo: #fcd34d;
+  --tanker: #fda4af;
+  --tug: #6ee7b7;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.14);
+  --err: #fb7185;
+  --err-bg: rgba(251, 113, 133, 0.16);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
+}
+html[data-palette="amber"] {
+  --bg: #110c06;
+  --panel: #1a120a;
+  --panel-2: #291d11;
+  --border: #4a3520;
+  --border-hi: #735333;
+  --text: #fbf3e6;
+  --text-dim: #d6c2a7;
+  --text-faint: #bfa888;
+  --accent: #ffb02e;
+  --accent-ink: #241200;
+  --ferry: #7dd3fc;
+  --cargo: #fcd34d;
+  --tanker: #fda4af;
+  --tug: #6ee7b7;
+  --ok: #4ade80;
+  --ok-bg: rgba(74, 222, 128, 0.14);
+  --err: #fb7185;
+  --err-bg: rgba(251, 113, 133, 0.16);
+  --warn: #fbbf24;
+  --warn-bg: rgba(251, 191, 36, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
+}
+html[data-palette="chart"] {
+  --bg: #e7e1d1;
+  --panel: #faf7ef;
+  --panel-2: #eae3d2;
+  --border: #c4baa2;
+  --border-hi: #8c8168;
+  --text: #111c26;
+  --text-dim: #364552;
+  --text-faint: #4b5a68;
+  --accent: #b32b1c;
+  --accent-ink: #ffffff;
+  --ferry: #0369a1;
+  --cargo: #92400e;
+  --tanker: #b42318;
+  --tug: #146c38;
+  --ok: #146c38;
+  --ok-bg: rgba(20, 108, 56, 0.12);
+  --err: #b42318;
+  --err-bg: rgba(180, 35, 24, 0.12);
+  --warn: #92400e;
+  --warn-bg: rgba(180, 83, 9, 0.14);
+  --info: #0369a1;
+  --info-bg: rgba(3, 105, 161, 0.13);
+}
+
+@layer components {
+  .btn { @apply inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold; }
+  .btn.mono { @apply font-mono; }
+  .icon-btn { @apply inline-flex items-center justify-center rounded p-1.5; }
+  .field { @apply flex flex-col gap-1 text-sm; }
+  .field input, .field select { @apply rounded border px-3 py-2 focus:outline-none; }
+  .form-err { @apply rounded border px-3 py-2 text-sm; }
+  .modal-tabs { @apply flex gap-2; }
+  .modal-demo { @apply flex gap-2; }
+  .topbar { @apply flex flex-wrap items-center gap-3 border-b px-4 py-2; }
+  .brand { @apply flex items-center gap-2; }
+  .brand-text { @apply flex flex-col leading-tight; }
+  .brand-title { @apply text-sm font-bold tracking-wide; }
+  .brand-sub { @apply text-[10px]; }
+  .topbar-right { @apply flex flex-1 flex-wrap items-center justify-end gap-2; }
+  .topbar-divider { @apply h-5 w-px; }
+  .stat { @apply flex flex-col leading-tight; }
+  .stat-label { @apply text-[10px] uppercase; }
+  .stat-value { @apply font-mono text-sm font-semibold; }
+  .stat-age { @apply ml-1 text-[10px]; }
+  .wib-stat, .utc-stat, .fleet-stat { @apply items-end; }
+  .display-control { @apply relative; }
+  .display-menu { @apply absolute right-0 top-full z-50 mt-1 flex w-48 flex-col gap-1 rounded border p-2 shadow-xl; }
+  .display-menu-title { @apply block px-2 py-1 text-[10px] uppercase; }
+  .display-menu-sep { @apply my-1 block h-px; }
+  .display-long { @apply hidden sm:inline; }
+  .display-short { @apply inline sm:hidden; }
+  .auth-user { @apply text-sm; }
+  .sim-badge { @apply rounded border px-2 py-0.5 text-[10px] font-bold; }
+  .mode-badge { @apply rounded border px-2 py-0.5 text-[10px] font-bold; }
+  .conn-badge { @apply flex items-center gap-1.5 rounded px-2 py-1 text-xs font-semibold; }
+  .conn-dot { @apply h-2 w-2 rounded-full bg-current; }
+  .main { @apply flex h-[calc(100vh-56px)] overflow-hidden; }
+  .chart { @apply relative flex-1; }
+  .map-dark { @apply h-full w-full; }
+  .open-sidebar-btn { @apply hidden; }
+  .open-sidebar-btn.visible { @apply flex; }
+  .sidebar.collapsed { @apply hidden; }
+  .stale-banner { @apply fixed left-1/2 top-20 z-30 -translate-x-1/2 rounded border px-4 py-2 text-sm; }
+  .banner-btn { @apply ml-2 rounded border px-2 py-0.5 text-xs font-semibold; }
+  .history-panel { @apply absolute bottom-4 left-4 right-4 z-20 rounded-lg border p-3 backdrop-blur; }
+  .history-head { @apply flex items-center gap-2 border-b pb-2; }
+  .history-title { @apply text-xs font-bold tracking-wide; }
+  .history-ship { @apply text-sm font-semibold; }
+  .history-mmsi { @apply font-mono text-xs; }
+  .history-slider-row { @apply flex items-center gap-2 py-2; }
+  .history-time { @apply font-mono text-sm font-semibold; }
+  .history-zone { @apply text-[10px]; }
+  .history-range { @apply flex-1; }
+  .range-ends { @apply flex justify-between text-[10px]; }
+  .history-count { @apply text-[10px]; }
+  .history-controls { @apply flex flex-wrap items-center gap-2 py-2; }
+  .history-readout { @apply text-xs; }
+  .history-anomaly { @apply text-xs; }
+  .history-end-note { @apply text-xs; }
+  .history-msg { @apply text-xs; }
+  .sidebar { @apply flex w-80 shrink-0 flex-col border-l; }
+  .sidebar-head { @apply flex items-center justify-between border-b px-3 py-2; }
+  .sidebar-title { @apply text-xs font-bold tracking-wide; }
+  .view-nav { @apply flex gap-1 rounded p-1; }
+  .view-tab { @apply rounded px-3 py-1.5 text-xs font-semibold; }
+  .search-row { @apply px-2 py-2; }
+  .filter-toggle { @apply flex w-full items-center justify-between rounded border px-3 py-2 text-xs font-semibold; }
+  .ship-list { @apply flex-1 overflow-y-auto p-2; }
+  .state-box { @apply flex flex-col items-center gap-2 p-6 text-center; }
+  .spinner { @apply h-6 w-6 animate-spin rounded-full border-2; }
+  .state-note { @apply text-xs; }
+  .modal { @apply fixed inset-0 m-auto w-full max-w-md rounded-lg border p-0 shadow-xl; }
+  .modal.wide { @apply max-w-2xl; }
+  .modal-head { @apply flex items-center justify-between border-b px-4 py-3; }
+  .modal-title { @apply text-base font-semibold; }
+  .route-tools { @apply flex items-center gap-2; }
+  .toast { @apply fixed bottom-4 right-4 z-50 rounded border px-4 py-2 text-sm shadow-lg; }
+  .map-status { @apply flex items-center gap-2 rounded px-2 py-1 font-mono text-xs; }
+  .type-tag { @apply rounded px-1.5 py-0.5 text-xs font-semibold uppercase; }
+  .status-dot { @apply inline-block h-2 w-2 rounded-full; }
+  .fav-star { @apply rounded p-1; }
+  .ship-row { @apply flex items-center gap-2 px-2 py-1.5; }
+  .popup-row { @apply flex items-center justify-between gap-3 text-sm; }
+  .popup-row-value { @apply font-medium; }
+  .popup-type { @apply rounded px-2 py-0.5 text-xs font-semibold uppercase; }
+  .detail-head { @apply flex items-center justify-between border-b px-4 py-3; }
+  .detail-title { @apply truncate text-base font-semibold; }
+  .detail-live { @apply border-t px-4 py-3; }
+  .detail-actions { @apply flex flex-wrap gap-2 border-t px-4 py-3; }
+  .detail-foot { @apply px-4 py-2 text-xs; }
+  .empty-state { @apply flex flex-col items-center gap-2 p-6 text-center; }
+}

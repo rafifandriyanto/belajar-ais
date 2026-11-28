@@ -14,7 +14,7 @@ Konsol ini memantau pergerakan kapal di Selat Madura dan Pelabuhan Tanjung Perak
 - **Filter dan navigasi**: filter Ferry, Cargo, Tanker, Tug, dan Favorit. Di layar ≤600px filter jadi satu tombol FILTER. Sidebar punya tab PETA, ARMADA, dan RIWAYAT.
 - **Akun dan CRUD kapal**: daftar dan masuk dengan peran admin atau operator. Admin mengelola semua kapal, operator hanya kapalnya sendiri. Form tambah/edit memakai klik peta untuk waypoint, dengan undo dan clear. Perubahan langsung muncul di semua client lewat `fleet:update`.
 - **Status koneksi**: badge awal `MENYAMBUNG`, lalu `LIVE` setelah frame pertama. Socket gagal atau data berhenti lebih dari 12 detik memunculkan umur data dan banner, disertai tombol COBA LAGI bila belum ada data sama sekali.
-- **Tampilan**: menu Tampilan berisi empat palet (sonar, phosphor, amber, chart) dan pilihan tema peta gelap atau terang. Pilihan disimpan lokal. Chip SIMULASI selalu terlihat di topbar.
+- **Tampilan**: menu Tampilan berisi empat palet (sonar, phosphor, amber, chart) dan pilihan tema peta gelap atau terang. Pilihan disimpan lokal. Indikator SIMULASI menyatu dengan badge status koneksi di topbar.
 - **Deep link**: `?ship=<mmsi>` membuka detail dan riwayat kapal. Parameter `from` dan `to` ISO 8601 membatasi rentang waktu.
 
 ![Panel detail kapal](docs/screenshots/detail.png)
@@ -34,7 +34,7 @@ Palet lain: [sonar](docs/screenshots/v21-palette-sonar.png), [phosphor](docs/scr
 - Panel detail tidak lagi menutup daftar kapal. Di desktop ia jadi kolom ketiga; di bawah 1024px jadi bottom sheet.
 - Panel riwayat berada di kolom peta sehingga tombolnya tidak tertutup panel detail.
 - Saat playback, hanya track dan playhead yang menonjol. Marker live, jejak, dan ring seleksi disembunyikan.
-- Topbar dikelompokkan dalam tiga bagian. Jam WIB dan UTC tetap keduanya. Tombol tema dan palet digabung menjadi menu Tampilan.
+- Topbar desktop diringkas: jam WIB dan UTC tampil berdampingan tanpa label berulang, aksi akun (Kelola User dan Keluar) digabung ke dropdown profil, menu Tampilan menggabungkan palet dan tema peta, dan indikator SIMULASI menyatu dengan badge status koneksi.
 - Sidebar mendapat navigasi PETA, ARMADA, dan RIWAYAT.
 - Font berganti ke Fira Sans untuk antarmuka dan Fira Code untuk angka. Teks fungsional minimal 12px.
 - Koneksi awal yang gagal tidak lagi menampilkan badge LIVE. Status `MENYAMBUNG`, `BELUM ADA DATA`, dan tombol COBA LAGI menggantikannya.
@@ -48,11 +48,11 @@ Palet lain: [sonar](docs/screenshots/v21-palette-sonar.png), [phosphor](docs/scr
 | Data statis | PostgreSQL (`pg`): `ships`, `routes`, `ports`, `users`, `sessions` |
 | Riwayat posisi | MongoDB (Mongoose), compound index, TTL retensi |
 | Auth | `node:crypto` scrypt dan cookie session HttpOnly |
-| Frontend | Vanilla JS (ES modules), Leaflet 1.9.4, CSS design tokens |
+| Frontend | Vanilla JS (ES modules), Leaflet 1.9.4, Tailwind CSS 3 (PostCSS), CSS design tokens, Bootstrap Icons 1.11.3 |
 | Tipografi | Fira Sans dan Fira Code |
 | Test | `node:test` |
 
-Tidak ada build step, framework frontend, atau API key peta.
+Tanpa framework frontend atau API key peta; build CSS memakai Tailwind CLI (`npm run build:css`).
 
 ## Arsitektur
 
@@ -96,6 +96,7 @@ cd belajar-ais
 npm install
 cp .env.example .env
 npm run seed
+npm run build:css
 npm run dev
 ```
 
@@ -103,7 +104,7 @@ npm run dev
 
 Buka http://localhost:3000.
 
-`npm run seed` bisa dijalankan berulang. Seed mengisi kapal, rute, pelabuhan, particulars, dan akun admin bila `ADMIN_USERNAME`/`ADMIN_PASSWORD` disetel. Bila tidak ada, pendaftar pertama menjadi admin.
+`npm run seed` bisa dijalankan berulang. Seed mengisi kapal, rute, pelabuhan, particulars, dan akun admin bila `ADMIN_USERNAME`/`ADMIN_PASSWORD` disetel di `.env`. Pendaftaran publik lewat `/api/auth/register` hanya terbuka saat tabel `users` masih kosong (selanjutnya hanya admin); role `admin` diberikan bila username cocok dengan `ADMIN_USERNAME`. Jika mengubah markup atau konfigurasi Tailwind, jalankan `npm run build:css` (atau `npm run watch:css` saat pengembangan).
 
 Tanpa PostgreSQL atau MongoDB, server tetap jalan dengan data dari `data/fleet.js`. Riwayat dan auth tidak aktif, dan UI menampilkan alasannya.
 
@@ -120,10 +121,12 @@ Variabel `.env` opsional: `POSITION_TTL_DAYS` (default 30 hari, `0` berarti sela
 | DELETE | `/api/ships/:mmsi` | Hapus kapal, butuh auth |
 | GET | `/api/ships/:mmsi/history` | Riwayat posisi; `limit` 1-1000, `from`, `to` ISO |
 | GET | `/api/ports` | Daftar pelabuhan |
-| POST | `/api/auth/register` | Daftar akun |
+| POST | `/api/auth/register` | Daftar akun (bootstrap atau khusus admin) |
 | POST | `/api/auth/login` | Masuk dan set cookie session |
 | POST | `/api/auth/logout` | Keluar |
 | GET | `/api/auth/me` | User aktif, atau `data: null` bila belum masuk |
+| GET | `/api/auth/users` | Daftar seluruh akun, khusus admin |
+| DELETE | `/api/auth/users/:id` | Hapus akun, khusus admin |
 
 Socket.io memancarkan `ships:update` tiap dua detik hanya bila ada client, dan `fleet:update` setelah CRUD kapal.
 
@@ -152,9 +155,15 @@ node scripts/verify-palettes.mjs
 ├── db/
 ├── models/Position.js
 ├── server.js
+├── tailwind.config.js
+├── postcss.config.js
+├── package.json
 ├── public/
 │   ├── index.html
-│   ├── css/console.css
+│   ├── css/
+│   │   ├── input.css
+│   │   ├── tailwind.css
+│   │   └── console.css
 │   └── js/
 ├── scripts/
 ├── test/

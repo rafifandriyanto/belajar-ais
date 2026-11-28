@@ -5,6 +5,55 @@
  */
 
 import { escapeHtml, TYPE_COLORS, matchShip } from './util.js';
+const typeColor = (t) => ({ ferry:'bg-sky-500/20 text-sky-300', cargo:'bg-amber-500/20 text-amber-300', tanker:'bg-rose-500/20 text-rose-300', tug:'bg-emerald-500/20 text-emerald-300' }[t] || 'bg-slate-500/20 text-slate-300');
+const FILTER_ITEMS = [
+  { key: 'ferry', label: 'Ferry', icon: 'bi-water', iconColor: 'text-blue-400', border: 'border-teal-500', active: true },
+  { key: 'cargo', label: 'Cargo', icon: 'bi-box-seam', iconColor: 'text-yellow-400', border: 'border-teal-500', active: true },
+  { key: 'tanker', label: 'Tanker', icon: 'bi-droplet', iconColor: 'text-red-400', border: 'border-teal-500', active: true },
+  { key: 'tug', label: 'Tug', icon: 'bi-life-preserver', iconColor: 'text-green-400', border: 'border-teal-500', active: true },
+  { key: 'favorit', label: 'Favorit', icon: 'bi-star-fill', iconColor: 'text-slate-400', border: 'border-slate-500', span: 'col-span-2', id: 'favFilter', active: false },
+];
+
+export const SHIP_TYPES = FILTER_ITEMS.filter((x) => !x.id);
+export const typeIcon = (t) => {
+  const item = SHIP_TYPES.find((x) => x.key === t);
+  return item ? `<i class="bi ${item.icon}" aria-hidden="true"></i>` : '';
+};
+
+/** Render 5 tombol filter (Ferry, Cargo, Tanker, Tug, Favorit) ke DOM dengan Bootstrap Icons & Tailwind. */
+export function renderFilterButtons(target = '#filterGrid') {
+  const container = typeof target === 'string' ? document.querySelector(target) : target;
+  if (!container) return;
+  container.className = 'filter-grid grid grid-cols-2 gap-2 border-b border-slate-800 p-2';
+  container.replaceChildren(
+    ...FILTER_ITEMS.map((item) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      if (item.id) btn.id = item.id;
+      else btn.dataset.filter = item.key;
+
+      btn.setAttribute('aria-pressed', String(item.active));
+      btn.className = [
+        'filter-btn',
+        item.active ? 'active' : '',
+        item.id ? 'fav-chip' : '',
+        'inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2',
+        'bg-[#1b2431] hover:bg-slate-700 transition-colors duration-150',
+        'font-sans text-sm font-semibold text-slate-200',
+        'focus:outline-none focus:ring-2 focus:ring-teal-500',
+        item.border,
+        item.span || '',
+      ].filter(Boolean).join(' ');
+
+      const icon = document.createElement('i');
+      icon.className = `bi ${item.icon} ${item.iconColor} text-lg leading-none`;
+      icon.setAttribute('aria-hidden', 'true');
+
+      btn.append(icon, document.createTextNode(item.label));
+      return btn;
+    }),
+  );
+}
 
 const SHIP_SIZES = {
   ferry: { w: 18, h: 40 },
@@ -88,21 +137,21 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
     // Entrance stagger hanya saat baris pertama kali dibuat
     row.style.animationDelay = `${Math.min(markers.size * 35, 315)}ms`;
     row.innerHTML = `
-      <button class="ship-open" type="button" aria-expanded="false" aria-controls="detailDrawer"
+      <button class="ship-open flex w-full flex-col gap-1 rounded px-2 py-1.5 text-left hover:bg-slate-800" type="button" aria-expanded="false" aria-controls="detailDrawer"
               aria-label="${escapeHtml(ship.name)}, ${escapeHtml(ship.type)}, MMSI ${escapeHtml(ship.mmsi)}">
-        <span class="ship-row-top">
-          <span class="ship-name" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
-          <span class="type-tag ${escapeHtml(ship.type)}">${escapeHtml(ship.type)}</span>
+        <span class="flex min-w-0 items-center justify-between gap-2">
+          <span class="truncate font-medium" data-el="name" title="${escapeHtml(ship.name)}">${escapeHtml(ship.name)}</span>
+          <span class="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold uppercase ${typeColor(ship.type)}" data-el="type">${typeIcon(ship.type)} ${escapeHtml(ship.type)}</span>
         </span>
-        <span class="ship-row-meta">
+        <span class="flex items-center gap-2 text-xs text-slate-400">
           <span class="status-dot" data-el="dot"></span>
           <span data-el="speed"></span>
           <span data-el="heading"></span>
           <span data-el="status"></span>
-          <span class="mmsi">…${escapeHtml(ship.mmsi.slice(-4))}</span>
+          <span class="ml-auto font-mono">…${escapeHtml(ship.mmsi.slice(-4))}</span>
         </span>
       </button>
-      <button class="fav-star" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
+      <button class="fav-star rounded p-1 text-slate-400 hover:text-amber-300" data-el="fav" aria-pressed="false" title="Favorit" aria-label="Favoritkan ${escapeHtml(ship.name)}">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 16.5 14 18.5 21 12 17 5.5 21 7.5 14 2 9.3 9 9"/></svg>
       </button>`;
     listEl.appendChild(row);
@@ -110,6 +159,8 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
       row,
       els: {
         open: row.querySelector('.ship-open'),
+        name: row.querySelector('[data-el="name"]'),
+        badge: row.querySelector('[data-el="type"]'),
         dot: row.querySelector('[data-el="dot"]'),
         speed: row.querySelector('[data-el="speed"]'),
         heading: row.querySelector('[data-el="heading"]'),
@@ -119,16 +170,19 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
     };
   }
 
-  function makeMarker(ship) {
+  function buildMarkerIcon(ship) {
     const { w, h } = SHIP_SIZES[ship.type] || SHIP_SIZES.ferry;
-    const icon = L.divIcon({
+    return L.divIcon({
       className: 'custom-ship-marker',
       html: `<div class="ship-marker-wrapper">${buildShipSVG(ship.type, ship.heading, ship.mmsi)}</div>`,
       iconSize: [w, h],
       iconAnchor: [w / 2, h / 2],
       popupAnchor: [0, -(h / 2 + 6)],
     });
-    const marker = L.marker([ship.lat, ship.lon], { icon });
+  }
+
+  function makeMarker(ship) {
+    const marker = L.marker([ship.lat, ship.lon], { icon: buildMarkerIcon(ship) });
     marker.on('click', () => onSelect(ship.mmsi));
     marker.on('add', () => {
       const el = marker.getElement();
@@ -186,6 +240,19 @@ export function createFleet(map, { onSelect, favorites, onToggleFav }) {
         const { row, els } = makeRow(ship);
         obj = { marker, trail, history: [], data: ship, row, els };
         markers.set(ship.mmsi, obj);
+      } else if (obj.data.name !== ship.name || obj.data.type !== ship.type) {
+        const typeChanged = obj.data.type !== ship.type;
+        obj.els.name.textContent = ship.name;
+        obj.els.name.title = ship.name;
+        obj.els.open.setAttribute('aria-label', `${ship.name}, ${ship.type}, MMSI ${ship.mmsi}`);
+        obj.els.fav.setAttribute('aria-label', `Favoritkan ${ship.name}`);
+        if (typeChanged) {
+          obj.els.badge.className = `inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold uppercase ${typeColor(ship.type)}`;
+          obj.els.badge.innerHTML = `${typeIcon(ship.type)} ${escapeHtml(ship.type)}`;
+          obj.trail.setStyle({ color: TYPE_COLORS[ship.type] || TYPE_COLORS.ferry });
+          obj.marker.setIcon(buildMarkerIcon(ship));
+        }
+        obj.marker.getElement()?.setAttribute('aria-label', `${ship.name}, ${ship.type}, MMSI ${ship.mmsi}`);
       }
       obj.data = ship;
 

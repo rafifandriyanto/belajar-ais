@@ -15,13 +15,15 @@
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
+  <link rel="stylesheet" href="css/tailwind.css">
   <link rel="stylesheet" href="css/console.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 
   <!-- ═══ TOPBAR ═══ -->
-  <header class="topbar">
-    <div class="brand">
+  <header class="relative z-[1100] flex items-center gap-2 border-b border-slate-800 bg-slate-950 px-4 py-2">
+    <div class="brand flex items-center gap-2">
       <div class="brand-mark">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <circle cx="12" cy="12" r="9"/>
@@ -38,14 +40,7 @@
       </div>
     </div>
 
-    <div class="topbar-right">
-      <div id="fleetStat" class="stat fleet-stat" title="Jumlah kapal yang lolos filter dan umur frame terakhir">
-        <span class="stat-label">Armada</span>
-        <span class="stat-value"><span id="totalShips" class="accent">--</span><span id="dataAge" class="stat-age"></span></span>
-      </div>
-
-      <span class="topbar-divider" aria-hidden="true"></span>
-
+    <div class="topbar-right flex flex-1 items-center justify-end gap-3">
       <div class="stat wib-stat" title="Jam operasional (WIB)">
         <span class="stat-label">WIB</span>
         <span id="wibClock" class="stat-value">--:--:--</span>
@@ -57,67 +52,85 @@
 
       <span class="topbar-divider" aria-hidden="true"></span>
 
-      <div class="display-control">
-        <button id="displayBtn" class="btn" aria-haspopup="menu" aria-expanded="false" aria-controls="displayMenu" aria-label="Tampilan: palet dan tema peta">
+      <div class="relative">
+        <button id="displayBtn" class="inline-flex items-center gap-1.5 rounded border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500" aria-haspopup="menu" aria-expanded="false" aria-controls="displayMenu" aria-label="Tampilan: palet dan tema peta">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 12l6.5-6.5"/>
           </svg>
-          <span class="display-long">Tampilan</span><span class="display-short">Tampil</span>
+          <span class="hidden sm:inline">Tampilan</span>
+          <i class="bi bi-chevron-down text-[10px] opacity-70" aria-hidden="true"></i>
         </button>
-        <div id="displayMenu" class="display-menu" role="menu" aria-label="Tampilan" hidden>
-          <span class="display-menu-title">PALET</span>
-          <button type="button" role="menuitemradio" aria-checked="true" data-palette="sonar">Sonar</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-palette="phosphor">Phosphor</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-palette="amber">Amber</button>
-          <button type="button" role="menuitemradio" aria-checked="false" data-palette="chart">Chart</button>
-          <span class="display-menu-sep" aria-hidden="true"></span>
-          <button type="button" id="themeItem" role="menuitemcheckbox" aria-checked="true">Peta gelap</button>
+        <div id="displayMenu" class="absolute right-0 top-full z-50 mt-2 hidden w-48 flex-col gap-1 rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl" role="menu" aria-label="Tampilan" hidden>
+          <span class="px-2 py-1 text-[10px] uppercase tracking-wide text-slate-500">PALET</span>
+          <button type="button" role="menuitemradio" aria-checked="true" data-palette="sonar" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-emerald-400"></span>Sonar</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-palette="phosphor" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-green-300"></span>Phosphor</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-palette="amber" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-amber-400"></span>Amber</button>
+          <button type="button" role="menuitemradio" aria-checked="false" data-palette="chart" class="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"><span class="h-3 w-3 rounded-full bg-rose-400"></span>Chart</button>
+          <span class="my-1 h-px bg-slate-700" aria-hidden="true"></span>
+          <button type="button" id="themeItem" role="menuitemcheckbox" aria-checked="true" class="rounded px-2 py-1.5 text-left text-sm text-slate-200 hover:bg-slate-800">Peta gelap</button>
         </div>
       </div>
 
-      <span class="topbar-divider" aria-hidden="true"></span>
+      <div id="accountControl" class="relative">
+        <button id="authUser" type="button" class="auth-user" hidden aria-haspopup="menu" aria-expanded="false" aria-controls="accountMenu"></button>
+        <div id="accountMenu" class="absolute right-0 top-full z-50 mt-2 hidden w-48 flex-col gap-1 rounded-lg border border-slate-700 bg-slate-900 p-2 shadow-xl" role="menu" aria-label="Akun" hidden>
+          <div id="accountMeta" class="px-2 py-1 font-mono text-xs text-slate-400"></div>
+          <span class="my-0.5 h-px bg-slate-700" aria-hidden="true"></span>
+          <button id="usersBtn" type="button" role="menuitem" class="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-slate-200 hover:bg-slate-800" hidden aria-label="Kelola user"><i class="bi bi-people" aria-hidden="true"></i><span>Kelola User</span></button>
+          <button id="logoutBtn" type="button" role="menuitem" class="flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-rose-300 hover:bg-slate-800" hidden aria-label="Keluar"><i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Keluar</span></button>
+        </div>
+      </div>
 
-      <span id="authUser" class="auth-user" hidden></span>
       <button id="authBtn" class="btn" aria-label="Masuk">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 3h7v18h-7"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/>
         </svg>
         <span>MASUK</span>
       </button>
-      <button id="logoutBtn" class="btn" hidden aria-label="Keluar">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10 3H3v18h7"/><path d="M17 17l5-5-5-5"/><path d="M22 12H10"/>
-        </svg>
-        <span>KELUAR</span>
-      </button>
 
-      <span class="sim-badge" title="Seluruh kapal adalah simulasi, bukan feed AIS nyata"><span class="sim-long">SIMULASI</span><span class="sim-short">SIM</span></span>
+      <span class="topbar-divider" aria-hidden="true"></span>
+
       <span id="playbackBadge" class="mode-badge" hidden><span class="mode-long">PLAYBACK</span><span class="mode-short">PLAY</span></span>
       <div id="connBadge" class="conn-badge connecting" role="status">
         <span class="conn-dot"></span>
         <span id="connLabel">MENYAMBUNG</span>
+        <span id="dataAge" class="stat-age"></span>
+        <span class="sim-sep" aria-hidden="true">·</span>
+        <span class="sim-tag" title="Seluruh kapal adalah simulasi, bukan feed AIS nyata"><span class="sim-long">SIMULASI</span><span class="sim-short">SIM</span></span>
       </div>
     </div>
   </header>
 
   <!-- ═══ MAIN: PETA + SIDEBAR + DRAWER ═══ -->
-  <main class="main">
-    <div class="chart">
-      <div id="map" class="map-dark"></div>
+  <main class="main flex h-[calc(100vh-56px)] overflow-hidden">
+    <div class="chart relative flex-1">
+      <div id="map" class="map-dark h-full w-full"></div>
 
-      <div id="staleBanner" class="stale-banner" role="status" aria-live="polite" hidden>
+      <!-- Legenda marker -->
+      <div id="legend" class="legend">
+        <div class="legend-title">LEGENDA</div>
+        <div class="legend-row"><span class="legend-dot live"></span>Kapal Live (Posisi Saat Ini)</div>
+        <div class="legend-row"><span class="legend-dot playback"></span>Kapal Playback (Posisi Masa Lalu)</div>
+        <div class="legend-row"><span class="legend-dot ghost"></span>Ghost Marker (Jejak/Bayangan)</div>
+        <div class="legend-row"><span class="legend-dot anomaly"></span>Anomali (Kecepatan/Lokasi Tidak Wajar)</div>
+      </div>
+
+      <!-- Tombol bantuan -->
+      <button id="helpBtn" class="help-btn" type="button" aria-label="Bantuan" title="Bantuan">?</button>
+
+      <div id="staleBanner" class="stale-banner fixed left-1/2 top-20 z-30 -translate-x-1/2 rounded border border-amber-700 bg-amber-900/90 px-4 py-2 text-sm text-amber-100" role="status" aria-live="polite" hidden>
         <span id="staleText"></span>
         <button id="retryConn" class="banner-btn" type="button" hidden>COBA LAGI</button>
       </div>
 
-      <button id="openSidebarBtn" class="open-sidebar-btn" title="Buka sidebar" aria-label="Buka sidebar">
+      <button id="openSidebarBtn" class="open-sidebar-btn absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded border border-slate-700 bg-slate-900/90 text-slate-200 shadow hover:bg-slate-800" title="Buka sidebar" aria-label="Buka sidebar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
       </button>
 
       <!-- ═══ PANEL RIWAYAT & PLAYBACK ═══ -->
-      <section id="historyPanel" class="history-panel">
+      <section id="historyPanel" class="history-panel absolute bottom-4 left-4 right-4 z-20 rounded-lg border border-slate-800 bg-slate-950 p-3">
         <div class="history-head">
           <span class="history-title">RIWAYAT</span>
           <span id="historyShip" class="history-ship"></span>
@@ -130,7 +143,7 @@
         </div>
         <div id="historyBody">
           <div class="history-slider-row">
-            <span id="historyTime" class="history-time">--:--:--</span><span class="history-zone">WIB</span>
+            <span id="historyTime" class="history-time">--:--:--</span>
             <div class="history-range">
               <input type="range" id="historySlider" min="0" max="0" value="0" step="1" aria-label="Posisi waktu riwayat">
               <div class="range-ends"><span id="historyStart">--:--:--</span><span id="historyEnd">--:--:--</span></div>
@@ -155,7 +168,7 @@
       </section>
     </div>
 
-    <aside id="sidebar" class="sidebar">
+    <aside id="sidebar" class="sidebar flex w-72 shrink-0 flex-col border-l border-slate-800 bg-slate-950">
       <div class="sidebar-head">
         <span class="sidebar-title">ARMADA AKTIF<b id="sidebarCount">0</b></span>
         <button id="addShipBtn" class="icon-btn" hidden title="Tambah kapal" aria-label="Tambah kapal">
@@ -168,43 +181,37 @@
         </button>
       </div>
 
-      <nav class="view-nav" aria-label="Navigasi konsol">
-        <button type="button" class="view-tab active" data-view="peta" aria-current="page">PETA</button>
-        <button type="button" class="view-tab" data-view="armada">ARMADA</button>
-        <button type="button" class="view-tab" data-view="riwayat">RIWAYAT</button>
+      <nav class="view-nav flex gap-2 rounded bg-slate-900 p-2" aria-label="Navigasi konsol">
+        <button type="button" class="view-tab active flex items-center gap-1.5" data-view="peta" aria-current="page"><i class="bi bi-map" aria-hidden="true"></i> PETA</button>
+        <button type="button" class="view-tab flex items-center gap-1.5" data-view="armada"><svg class="shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19 17l2-5-9-3-9 3 2 5"/><path d="M12 9V3"/><path d="M9 5h6"/></svg> ARMADA</button>
+        <button type="button" class="view-tab flex items-center gap-1.5" data-view="riwayat"><i class="bi bi-clock-history" aria-hidden="true"></i> RIWAYAT</button>
       </nav>
 
-      <div class="search-row">
-        <input id="shipSearch" type="search" placeholder="Cari nama / MMSI" aria-label="Cari kapal berdasarkan nama atau MMSI" autocomplete="off">
+      <div class="search-row px-2 py-2">
+        <input id="shipSearch" type="search" placeholder="Cari nama / MMSI" aria-label="Cari kapal berdasarkan nama atau MMSI" autocomplete="off" class="w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none">
       </div>
 
       <button id="filterToggle" class="filter-toggle" type="button" aria-expanded="false" aria-controls="filterGrid" hidden>
         <span>FILTER</span><span id="filterLabel" class="filter-label">4/4 tipe</span>
       </button>
 
-      <div class="filter-grid" id="filterGrid">
-        <button data-filter="ferry" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Ferry</button>
-        <button data-filter="cargo" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Cargo</button>
-        <button data-filter="tanker" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Tanker</button>
-        <button data-filter="tug" class="filter-btn active" aria-pressed="true"><span class="dot"></span>Tug</button>
-        <button id="favFilter" class="filter-btn fav-chip" aria-pressed="false"><span class="dot"></span>Favorit</button>
-      </div>
+      <div class="filter-grid grid grid-cols-2 gap-2 border-b border-slate-800 p-2" id="filterGrid"></div>
 
-      <div id="shipList" class="ship-list">
-        <div id="loadingState" class="state-box">
-          <div class="spinner"></div>
+      <div id="shipList" class="ship-list flex-1 overflow-y-auto p-2">
+        <div id="loadingState" class="state-box flex flex-col items-center gap-2 p-6 text-center text-slate-400">
+          <div class="spinner h-6 w-6 animate-spin rounded-full border-2 border-slate-600 border-t-sky-400"></div>
           <span>Menunggu data simulasi AIS...</span>
-          <span class="state-note">Kapal di layar ini adalah simulasi, bukan feed AIS nyata.</span>
+          <span class="state-note text-xs text-slate-500">Kapal di layar ini adalah simulasi, bukan feed AIS nyata.</span>
         </div>
       </div>
     </aside>
   </main>
 
-  <dialog id="authDialog" class="modal">
-    <form id="authForm" method="dialog">
-      <div class="modal-head">
-        <span class="modal-title" id="authTitle">MASUK OPERATOR</span>
-        <button type="button" class="icon-btn" id="authClose" aria-label="Tutup">
+  <dialog id="authDialog" class="modal fixed inset-0 m-auto w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-xl">
+    <form id="authForm" method="dialog" class="flex flex-col gap-3 p-4">
+      <div class="modal-head flex items-center justify-between">
+        <span class="modal-title text-base font-semibold" id="authTitle">MASUK OPERATOR</span>
+        <button type="button" class="icon-btn rounded p-1 hover:bg-slate-800" id="authClose" aria-label="Tutup">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
@@ -223,18 +230,22 @@
     </form>
   </dialog>
 
-  <dialog id="editorDialog" class="modal wide">
-    <form id="editorForm" method="dialog">
-      <div class="modal-head">
-        <span class="modal-title" id="editorTitle">TAMBAH KAPAL</span>
-        <button type="button" class="icon-btn" id="editorClose" aria-label="Tutup">
+  <dialog id="editorDialog" class="modal wide rounded-lg border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-xl">
+    <form id="editorForm" method="dialog" class="flex flex-col gap-3 p-4">
+      <div class="modal-head flex items-center justify-between">
+        <span class="modal-title text-base font-semibold" id="editorTitle">TAMBAH KAPAL</span>
+        <button type="button" class="icon-btn rounded p-1 hover:bg-slate-800" id="editorClose" aria-label="Tutup">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
       <div class="form-grid">
         <label class="field"><span>Nama</span><input id="edName" required maxlength="100"></label>
         <label class="field"><span>MMSI (9 digit)</span><input id="edMmsi" required pattern="\d{9}" inputmode="numeric"></label>
-        <label class="field"><span>Tipe</span><select id="edType"><option value="ferry">ferry</option><option value="cargo">cargo</option><option value="tanker">tanker</option><option value="tug">tug</option></select></label>
+        <div class="field col-span-full">
+          <span id="edTypeLabel">Tipe</span>
+          <input type="hidden" id="edType" value="cargo">
+          <div id="edTypeGroup" class="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-labelledby="edTypeLabel"></div>
+        </div>
         <label class="field"><span>Kecepatan (kn)</span><input id="edSpeed" type="number" min="1" max="30" step="0.1" value="12"></label>
         <label class="field"><span>Sandar (detik)</span><input id="edDwell" type="number" min="0" max="3600" value="20"></label>
         <label class="field"><span>Destination</span><input id="edDest" maxlength="60"></label>
@@ -252,6 +263,36 @@
       <p id="edErr" class="form-err" role="alert" hidden></p>
       <button class="btn primary" id="edSubmit" type="submit">SIMPAN</button>
     </form>
+  </dialog>
+
+  <dialog id="usersDialog" class="modal wide">
+    <div class="modal-head">
+      <span class="modal-title" id="usersTitle">KELOLA USER</span>
+      <button type="button" class="icon-btn" id="usersClose" aria-label="Tutup">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-4">
+      <div id="usersList" class="space-y-2"></div>
+      <p id="usersErr" class="form-err mt-3" role="alert" hidden></p>
+    </div>
+  </dialog>
+
+  <dialog id="helpDialog" class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="helpTitle">BANTUAN — AIS VTS CONSOLE</span>
+      <button type="button" class="icon-btn" id="helpClose" aria-label="Tutup">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-4 text-sm space-y-2">
+      <p><b>AIS VTS Console</b> adalah simulasi pemantauan kapal di Selat Madura &amp; Tanjung Perak.</p>
+      <p><b>Playback (Riwayat):</b> pilih kapal → buka RIWAYAT → geser slider atau tekan PLAY (1×/4×/16×). Saat playback aktif, marker live disembunyikan dan nilai live dibekukan.</p>
+      <p><b>Legenda:</b> 🟢 Live, 🔵 Playback, ⚪ Ghost, 🔴 Anomali (titik yang dibuang speed-gate).</p>
+      <p><b>Follow:</b> tombol FOLLOW membuat peta mengikuti kapal (opsional).</p>
+      <p><b>Filter:</b> Ferry/Cargo/Tanker/Tug/Favorit; pencarian nama/MMSI.</p>
+      <p class="text-slate-400 text-xs">Data simulasi — bukan feed AIS nyata.</p>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" role="status"></div>

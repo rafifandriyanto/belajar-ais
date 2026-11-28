@@ -1,16 +1,48 @@
 /** editor.js — Form kapal + gambar rute dengan klik peta.
  * Dialog non-modal (show, bukan showModal) supaya peta tetap bisa diklik
  * saat form terbuka; posisi dialog di kiri agar area peta bebas. */
+import { SHIP_TYPES } from './fleet.js';
+
 export function createEditor(map, { onSaved }) {
   const dlg = document.getElementById('editorDialog');
   const form = document.getElementById('editorForm');
   const err = document.getElementById('edErr');
   const count = document.getElementById('edRouteCount');
+  const typeInput = document.getElementById('edType');
+  const typeGroup = document.getElementById('edTypeGroup');
   let points = [];
   let layers = [];
   let editing = null;
   let handler = null;
   let onKey = null;
+
+  if (typeGroup) {
+    typeGroup.replaceChildren(...SHIP_TYPES.map((t) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'type-choice';
+      btn.dataset.type = t.key;
+      btn.setAttribute('role', 'radio');
+      btn.setAttribute('aria-checked', 'false');
+      const icon = document.createElement('i');
+      icon.className = `bi ${t.icon} ${t.iconColor} text-base leading-none`;
+      icon.setAttribute('aria-hidden', 'true');
+      btn.append(icon, document.createTextNode(t.label));
+      return btn;
+    }));
+    typeGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-type]');
+      if (btn) setType(btn.dataset.type);
+    });
+  }
+
+  function setType(val) {
+    const next = SHIP_TYPES.some((t) => t.key === val) ? val : 'cargo';
+    if (typeInput) typeInput.value = next;
+    typeGroup?.querySelectorAll('[data-type]').forEach((b) => {
+      b.setAttribute('aria-checked', String(b.dataset.type === next));
+    });
+  }
 
   const accent = () => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3fd8c7';
   function redraw() {
@@ -28,7 +60,7 @@ export function createEditor(map, { onSaved }) {
     document.getElementById('edName').value = s?.name || '';
     document.getElementById('edMmsi').value = s?.mmsi || '';
     document.getElementById('edMmsi').disabled = !!s;
-    document.getElementById('edType').value = s?.type || 'cargo';
+    setType(s?.type || 'cargo');
     document.getElementById('edSpeed').value = s?.speedKn ?? 12;
     document.getElementById('edDwell').value = s?.dwellSeconds ?? 20;
     document.getElementById('edDest').value = s?.destination || '';
